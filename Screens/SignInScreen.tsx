@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import credentialsData from "../credentials.json"; // Import JSON file
@@ -20,7 +20,6 @@ const SignInScreen = () => {
   const [formError, setFormError] = useState("");
 
   const validateSignIn = () => {
-
     const trimmedUsername = username.trim();
     const trimmedPassword = password.trim();
     let valid = true;
@@ -28,12 +27,11 @@ const SignInScreen = () => {
     setPasswordError("");
     setFormError("");
 
-    // checks that the username is at least 5 characters long (white spaces are not counted)
     if (trimmedUsername.length < 5) {
       setUsernameError("Username must be at least 5 characters long!");
       valid = false;
     }
-  
+
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
     if (!passwordRegex.test(trimmedPassword)) {
       setPasswordError(
@@ -60,13 +58,16 @@ const SignInScreen = () => {
       return;
     }
 
-    // Navigate to Tab Navigator, passing username
     navigation.navigate("Home", { username: trimmedUsername });
   };
 
   return (
     <View style={styles.container}>
+      {/* Display the Deadlinez logo */}
+      <Image source={require("../assets/deadlinez-logo.png")} style={styles.logo} />
+
       <Text style={styles.title}>Sign In</Text>
+
       <TextInput
         style={styles.input}
         placeholder="Username"
@@ -87,8 +88,10 @@ const SignInScreen = () => {
       {formError ? <Text style={styles.error}>{formError}</Text> : null}
 
       <TouchableOpacity style={styles.button} onPress={validateSignIn}>
-        <Text style={styles.buttonText}>Sign In</Text>
+        <Text style={styles.buttonText}>Log In</Text>
       </TouchableOpacity>
+
+      <Text style={styles.footerText}>Don't have an account? <Text style={styles.link}>Sign up</Text></Text>
     </View>
   );
 };
@@ -103,44 +106,49 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     padding: 20,
   },
+  logo: {
+    width: 150,         // Adjust size as needed
+    height: 150,
+    marginBottom: 20,
+  },
   title: { 
-    fontSize: 30, 
+    fontSize: 28, 
     fontWeight: "bold", 
-    color: "#87CEFA",
-    textAlign: "center", 
-    marginBottom: 40,
+    color: "#000",
+    marginBottom: 20,
   },
   input: {
-    height: 40,
-    borderColor: "gray",
+    height: 45,
+    borderColor: "#ccc",
     borderWidth: 1,
-    marginBottom: 10,
-    paddingHorizontal: 8,
+    paddingHorizontal: 10,
     width: "100%",
     borderRadius: 8,
+    marginBottom: 10,
   },
   error: {
     color: "red",
     marginBottom: 10,
   },
   button: { 
-    backgroundColor: "#FFFFFF", 
+    backgroundColor: "#4682B4", 
     paddingVertical: 12, 
     paddingHorizontal: 30, 
     borderRadius: 8, 
     marginTop: 20, 
     alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#87CEFA", 
-    elevation: 3, 
-    shadowColor: "#000", 
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
   },
   buttonText: {
-    color: "#FFA500", 
+    color: "#fff", 
     fontSize: 18, 
-    fontWeight: "bold", 
+    fontWeight: "bold",
+  },
+  footerText: {
+    marginTop: 20,
+    color: "#555",
+  },
+  link: {
+    color: "#1E90FF",
+    fontWeight: "bold",
   },
 });
