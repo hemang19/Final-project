@@ -18,15 +18,25 @@ const HomeScreen = ({ route }: { route: HomeScreenRouteProp }) => {
   const { username } = route.params;
   const navigation = useNavigation<NavigationProp>();
 
+  const handleViewTasks = () => {
+    // Navigate to ViewTasks screen
+    navigation.navigate("ViewTasks");
+  };
+
+  const handleAddTask = () => {
+    // Navigate to AddTask screen
+    navigation.navigate("AddTask");
+  };
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       {/* Greeting Section */}
       <View style={styles.header}>
         <Text style={styles.greeting}>Good Morning, {username}!</Text>
         <TouchableOpacity>
-          <Image 
-            source={{ uri: "https://cdn-icons-png.flaticon.com/512/147/147144.png" }} 
-            style={styles.avatar} 
+          <Image
+            source={{ uri: "https://cdn-icons-png.flaticon.com/512/147/147144.png" }}
+            style={styles.avatar}
           />
         </TouchableOpacity>
       </View>
@@ -52,12 +62,13 @@ const HomeScreen = ({ route }: { route: HomeScreenRouteProp }) => {
 
       {/* Start Your Day Section */}
       <Text style={styles.startYourDayText}>Start your day</Text>
-      <TouchableOpacity style={styles.actionButton}>
+      <TouchableOpacity style={styles.actionButton} onPress={handleViewTasks}>
         <Text style={styles.actionButtonText}>View Tasks</Text>
         <Ionicons name="arrow-forward" size={20} color="black" />
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.actionButton}>
+      {/* Add Task Button */}
+      <TouchableOpacity style={styles.actionButton} onPress={handleAddTask}>
         <Text style={styles.actionButtonText}>Add Tasks</Text>
         <Ionicons name="add" size={20} color="black" />
       </TouchableOpacity>

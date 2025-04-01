@@ -1,24 +1,49 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, FlatList } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-// Sample Task Data
-const tasksDueThisMonth = [
-  { id: "1", title: "Capstone phase 1 presentation", date: "March 7, 2025", daysRemaining: 2, urgent: true },
-  { id: "2", title: "Capstone phase 2 presentation", date: "March 20, 2025", urgent: false },
-  { id: "3", title: "Web app assignment 4", date: "March 21, 2025", urgent: false },
-  { id: "4", title: "Software analysis report", date: "March 27, 2025", urgent: false },
-];
-
-const upcomingTasks = [{ id: "5", title: "Capstone final presentation", date: "April 24, 2025", urgent: false }];
+type Task = {
+  id: string;
+  title: string;
+  date: string;
+  assignedEmail: string;
+  selectedColor: string | null;
+  daysRemaining: number;
+  urgent: boolean;
+};
 
 const ViewTasksScreen = () => {
   const navigation = useNavigation();
+  const route = useRoute();
+  const [tasks, setTasks] = useState<Task[]>([]);
 
-  // Render each task item
-  const renderTaskItem = ({ item }: { item: any }) => (
-    <View style={styles.taskCard}>
+  // Load tasks from AsyncStorage when the component mounts
+  useEffect(() => {
+    const loadTasks = async () => {
+      const storedTasks = await AsyncStorage.getItem("tasks");
+      if (storedTasks) {
+        // Ensure that the tasks are parsed correctly
+        setTasks(JSON.parse(storedTasks));
+      }
+    };
+    loadTasks();
+  }, []);  // Empty dependency ensures this runs once when the component mounts
+
+  // Add new task from AddTask screen if passed via route
+  useEffect(() => {
+    if (route.params?.newTask) {
+      setTasks((prevTasks) => {
+        const updatedTasks = [...prevTasks, route.params.newTask]; // Append the new task
+        AsyncStorage.setItem("tasks", JSON.stringify(updatedTasks)); // Save the updated tasks list
+        return updatedTasks;
+      });
+    }
+  }, [route.params?.newTask]); // This will trigger whenever a new task is passed via route
+
+  const renderTaskItem = ({ item }: { item: Task }) => (
+    <View style={[styles.taskCard, { borderLeftColor: item.selectedColor || "#000" }]}>
       <View>
         <Text style={styles.taskTitle}>{item.title}</Text>
         <Text style={item.urgent ? styles.urgentDate : styles.taskDate}>
@@ -38,28 +63,22 @@ const ViewTasksScreen = () => {
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color="black" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>March 5, 2025</Text>
-        <TouchableOpacity>
+        <Text style={styles.headerTitle}>View Tasks</Text>
+        <TouchableOpacity onPress={() => navigation.navigate("AddTask")}>
           <Ionicons name="add-circle-outline" size={28} color="black" />
         </TouchableOpacity>
       </View>
 
       {/* Task Lists */}
-      <Text style={styles.sectionTitle}>Tasks due this month</Text>
-      <FlatList data={tasksDueThisMonth} renderItem={renderTaskItem} keyExtractor={(item) => item.id} />
-
-      <Text style={styles.sectionTitle}>Upcoming tasks</Text>
-      <FlatList data={upcomingTasks} renderItem={renderTaskItem} keyExtractor={(item) => item.id} />
-
-      {/* Floating Chat Button */}
-      <TouchableOpacity style={styles.chatButton}>
-        <Ionicons name="chatbubble-ellipses" size={28} color="black" />
-      </TouchableOpacity>
+      <Text style={styles.sectionTitle}>Tasks</Text>
+      <FlatList
+        data={tasks}
+        renderItem={renderTaskItem}
+        keyExtractor={(item) => item.id}
+      />
     </View>
   );
 };
-
-export default ViewTasksScreen;
 
 const styles = StyleSheet.create({
   container: {
@@ -94,6 +113,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
+    borderLeftWidth: 5,
   },
   taskTitle: {
     fontSize: 16,
@@ -108,16 +128,6 @@ const styles = StyleSheet.create({
     color: "#D32F2F",
     fontWeight: "bold",
   },
-  chatButton: {
-    position: "absolute",
-    bottom: 20,
-    right: 20,
-    backgroundColor: "#FFF",
-    padding: 15,
-    borderRadius: 50,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-  },
 });
+
+export default ViewTasksScreen;
