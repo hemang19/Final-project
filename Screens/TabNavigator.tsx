@@ -1,12 +1,11 @@
 import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import HomeScreen from "./HomeScreen";
-import CityScreen from "./CityScreen";
+import ProfileScreen from "./ProfileScreen";
 
 type TabParamList = {
   Home: { username: string }; 
-  Calgary: undefined;
-  Edmonton: undefined;
+  Profile: { username: string };
 };
 
 const Tab = createBottomTabNavigator<TabParamList>();
@@ -21,15 +20,12 @@ const TabNavigator = ({ username }: { username: string }) => {
         initialParams={{ username }}  
       />
 
-      {/* Calgary Screen Tab */}
-      <Tab.Screen name="Calgary">
-        {() => <CityScreen city="Calgary" link="https://www.calgary.ca/home.html" />}
-      </Tab.Screen>
-
-      {/* Edmonton Screen Tab */}
-      <Tab.Screen name="Edmonton">
-        {() => <CityScreen city="Edmonton" link="https://www.edmonton.ca/" />}
-      </Tab.Screen>
+      {/* Profile Screen Tab */}
+      <Tab.Screen
+        name="Profile"
+        component={ProfileScreen} 
+        initialParams={{ username }}  
+      />
 
     </Tab.Navigator>
   );
