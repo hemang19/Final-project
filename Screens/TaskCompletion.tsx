@@ -4,12 +4,10 @@ import {
   Text,
   StyleSheet,
   FlatList,
-  TouchableOpacity,
   SafeAreaView,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useNavigation, useRoute } from "@react-navigation/native";
-import { Ionicons } from "@expo/vector-icons";
+import { useRoute } from "@react-navigation/native";
 
 type Task = {
   id: string;
@@ -20,11 +18,10 @@ type Task = {
 
 const TaskCompletionScreen = () => {
   const route = useRoute();
-  const navigation = useNavigation();
   const { taskId } = route.params as { taskId: string };
 
   const [dateToday, setDateToday] = useState("");
-  const [completedTask, setCompletedTask] = useState<Task | null>(null);
+  const [completedTasks, setCompletedTasks] = useState<Task[]>([]);
   const [upcomingTasks, setUpcomingTasks] = useState<Task[]>([]);
 
   useEffect(() => {
@@ -40,17 +37,17 @@ const TaskCompletionScreen = () => {
       const stored = await AsyncStorage.getItem("tasks");
       const tasks: Task[] = stored ? JSON.parse(stored) : [];
 
-      const completed = tasks.find((task) => task.id === taskId);
+      const completed = tasks.filter((task) => task.completed);
       const upcoming = tasks.filter(
         (task) => task.id !== taskId && !task.completed
       );
 
-      setCompletedTask(completed || null);
+      setCompletedTasks(completed);
       setUpcomingTasks(upcoming);
     };
 
     loadTasks();
-  }, []);
+  }, [taskId]);
 
   const renderTaskCard = (task: Task) => (
     <View style={styles.taskCard}>
@@ -64,9 +61,6 @@ const TaskCompletionScreen = () => {
       {/* Date & Add Button */}
       <View style={styles.header}>
         <Text style={styles.date}>{dateToday}</Text>
-        <TouchableOpacity onPress={() => navigation.navigate("AddTask")}>
-          <Ionicons name="add-circle-outline" size={28} color="black" />
-        </TouchableOpacity>
       </View>
 
       <Text style={styles.subtitle}>Tasks due this month</Text>
@@ -74,10 +68,20 @@ const TaskCompletionScreen = () => {
       {/* Task Complete Message */}
       <Text style={styles.success}>Task complete 🎉</Text>
 
-      {/* ✅ Completed Task Card */}
-      {completedTask && renderTaskCard(completedTask)}
+      {/*  Completed Task Cards */}
+      {completedTasks.length > 0 && (
+        <>
+          <Text style={styles.sectionTitle}>Completed Tasks</Text>
+          <FlatList
+            data={completedTasks}
+            renderItem={({ item }) => renderTaskCard(item)}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={{ paddingBottom: 30 }}
+          />
+        </>
+      )}
 
-      {/* 📌 Upcoming Tasks */}
+      {/*  Upcoming Tasks */}
       {upcomingTasks.length > 0 && (
         <>
           <Text style={styles.sectionTitle}>Upcoming tasks</Text>
