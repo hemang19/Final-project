@@ -30,13 +30,16 @@ const ProfileScreen = ({ route }: { route: ProfileScreenRouteProp }) => {
       {/* Profile Info */}
       <View style={styles.profileContainer}>
         <Image
-          source={{ uri: "https://cdn-icons-png.flaticon.com/512/147/147144.png" }}
+          source={{
+            uri: "https://cdn-icons-png.flaticon.com/512/147/147144.png",
+          }}
           style={styles.avatar}
         />
         <View style={styles.profileText}>
           <Text style={styles.userSince}>User since: November 2024</Text>
-          {/* Link has to be updated to link to a QR code? */}
-          <Link href="#" style={styles.shareProfile}>Share profile</Link>
+          <TouchableOpacity>
+            <Text style={styles.shareProfile}>Share Profile</Text>
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -44,13 +47,23 @@ const ProfileScreen = ({ route }: { route: ProfileScreenRouteProp }) => {
       <View style={styles.divider} />
 
       {/* Account Settings */}
-      <Text style={styles.sectionTitle}>Account setting</Text>
+      <Text style={styles.sectionTitle}>Account Settings</Text>
       <View style={styles.settingsList}>
-        <Text style={styles.settingItem}>Change username</Text>
-        <Text style={styles.settingItem}>Change email</Text>
-        <Text style={styles.settingItem}>Change password</Text>
-        <Text style={styles.settingItem}>Change profile image</Text>
-        <Text style={styles.settingItem}>Notification settings</Text>
+        <TouchableOpacity style={styles.settingItem}>
+          <Text style={styles.settingText}>Change Username</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.settingItem}>
+          <Text style={styles.settingText}>Change Email</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.settingItem}>
+          <Text style={styles.settingText}>Change Password</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.settingItem}>
+          <Text style={styles.settingText}>Change Profile Image</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.settingItem}>
+          <Text style={styles.settingText}>Notification Settings</Text>
+        </TouchableOpacity>
       </View>
     </ScrollView>
   );
@@ -62,54 +75,81 @@ const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     padding: 20,
-    backgroundColor: "#fff",
+    backgroundColor: "#f7f7f7",
   },
   header: {
-    fontSize: 26,
-    fontWeight: "600",
+    fontSize: 28,
+    fontWeight: "700",
+    color: "#333",
     marginBottom: 20,
   },
   profileContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 10,
+    marginBottom: 15,
+    backgroundColor: "#fff",
+    padding: 15,
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 4,
   },
   avatar: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     marginRight: 15,
   },
   profileText: {
     flex: 1,
   },
   userSince: {
-    fontWeight: "bold",
-    marginBottom: 4,
+    fontWeight: "600",
     fontSize: 16,
+    color: "#777",
+    marginBottom: 5,
   },
   shareProfile: {
-    color: "gray",
-    textDecorationLine: "underline",
     fontSize: 16,
+    fontWeight: "600",
+    color: "#4CAF50",
+    textDecorationLine: "underline",
   },
   divider: {
     borderBottomWidth: 1,
-    borderBottomColor: "#ccc",
+    borderBottomColor: "#e0e0e0",
     marginVertical: 20,
     marginBottom: 25,
   },
   sectionTitle: {
-    fontSize: 22,
-    fontWeight: "600",
-    marginBottom: 10,
+    fontSize: 24,
+    fontWeight: "700",
+    color: "#333",
+    marginBottom: 15,
   },
   settingsList: {
-    gap: 10,
+    marginTop: 10,
   },
   settingItem: {
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    marginBottom: 12,
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  settingText: {
     fontSize: 16,
+    fontWeight: "500",
     color: "#333",
-    fontWeight: "400",
   },
 });

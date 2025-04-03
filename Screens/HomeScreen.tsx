@@ -28,6 +28,11 @@ const HomeScreen = ({ route }: { route: HomeScreenRouteProp }) => {
     navigation.navigate("AddTask");
   };
 
+  const handleAssignTask = () => {
+    // Navigate to AssignTask screen
+    navigation.navigate("AssignTask");
+  };
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       {/* Greeting Section */}
@@ -73,7 +78,8 @@ const HomeScreen = ({ route }: { route: HomeScreenRouteProp }) => {
         <Ionicons name="add" size={20} color="black" />
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.actionButton}>
+      {/* Assign Task Button */}
+      <TouchableOpacity style={styles.actionButton} onPress={handleAssignTask}>
         <Text style={styles.actionButtonText}>Assign Task</Text>
         <Ionicons name="person-add" size={20} color="black" />
       </TouchableOpacity>

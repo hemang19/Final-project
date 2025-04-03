@@ -56,73 +56,73 @@ export default function AddTaskScreen({ navigation }: any) {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.headerText}>Add New Task</Text>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: selectedColor || "#F5F5F5" }]}>
+      <ScrollView contentContainerStyle={styles.container}>
+        <Text style={styles.headerText}>Add New Task</Text>
 
-      <TextInput
-        placeholder="Task name"
-        value={taskName}
-        onChangeText={setTaskName}
-        style={styles.inputField}
-      />
+        <TextInput
+          placeholder="Task name"
+          value={taskName}
+          onChangeText={setTaskName}
+          style={styles.inputField}
+        />
 
-      <Text style={styles.label}>Select Due Date:</Text>
-      <Calendar
-        onDayPress={(day) => setSelectedDate(day.dateString)}
-        markedDates={
-          selectedDate ? { [selectedDate]: { selected: true, selectedColor: "#4CAF50" } } : {}
-        }
-        style={styles.calendar}
-      />
+        <Text style={styles.label}>Select Due Date:</Text>
+        <Calendar
+          onDayPress={(day) => setSelectedDate(day.dateString)}
+          markedDates={
+            selectedDate ? { [selectedDate]: { selected: true, selectedColor: "#4CAF50" } } : {}
+          }
+          style={styles.calendar}
+        />
 
-      <Text style={styles.label}>Select Color (Optional):</Text>
-      <View style={styles.colorPicker}>
-        {colors.map((color, index) => (
-          <TouchableOpacity
-            key={index}
-            style={[styles.colorOption, { backgroundColor: color }, selectedColor === color && styles.selectedColor]}
-            onPress={() => setSelectedColor(color)}
-          />
-        ))}
-      </View>
-
-      <TextInput
-        placeholder="Assign task (example@gmail.com)"
-        value={assignedEmail}
-        onChangeText={setAssignedEmail}
-        keyboardType="email-address"
-        style={styles.inputField}
-      />
-
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity
-          style={[styles.button, styles.createButton]}
-          onPress={handleCreateTask}
-        >
-          <Text style={styles.buttonText}>Create Task</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.button, styles.cancelButton]}
-          onPress={() => {
-            setTaskName("");
-            setSelectedDate(null);
-            setAssignedEmail("");
-            setSelectedColor(null);
-          }}
-        >
-          <Text style={styles.buttonText}>Cancel</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Modal to show confirmation */}
-      <Modal isVisible={isModalVisible} onBackdropPress={() => setIsModalVisible(false)}>
-        <View style={styles.modalContent}>
-          <Text style={styles.modalText}>Task has been successfully added!</Text>
+        <Text style={styles.label}>Select Color (Optional):</Text>
+        <View style={styles.colorPicker}>
+          {colors.map((color, index) => (
+            <TouchableOpacity
+              key={index}
+              style={[styles.colorOption, { backgroundColor: color }, selectedColor === color && styles.selectedColor]}
+              onPress={() => setSelectedColor(color)}
+            />
+          ))}
         </View>
-      </Modal>
-    </ScrollView>
+
+        <TextInput
+          placeholder="Assign task (example@gmail.com)"
+          value={assignedEmail}
+          onChangeText={setAssignedEmail}
+          keyboardType="email-address"
+          style={styles.inputField}
+        />
+
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            style={[styles.button, styles.createButton]}
+            onPress={handleCreateTask}
+          >
+            <Text style={styles.buttonText}>Create Task</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.button, styles.cancelButton]}
+            onPress={() => {
+              setTaskName("");
+              setSelectedDate(null);
+              setAssignedEmail("");
+              setSelectedColor(null);
+            }}
+          >
+            <Text style={styles.buttonText}>Cancel</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Modal to show confirmation */}
+        <Modal isVisible={isModalVisible} onBackdropPress={() => setIsModalVisible(false)}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalText}>Task has been successfully added!</Text>
+          </View>
+        </Modal>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -130,12 +130,10 @@ export default function AddTaskScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#F5F5F5",
-  },  
+  },
   container: {
     flexGrow: 1,
     padding: 20,
-    backgroundColor: "#F5F5F5",
     paddingTop: Platform.OS === "ios" ? 40 : 20,
   },
   headerText: {
