@@ -1,7 +1,9 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Platform } from "react-native";
 import Modal from "react-native-modal";
 import { Calendar } from "react-native-calendars";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function AddTaskScreen({ navigation }: any) {
   const [taskName, setTaskName] = useState("");
@@ -24,14 +26,26 @@ export default function AddTaskScreen({ navigation }: any) {
       urgent: calculateDaysRemaining(selectedDate) <= 3, // Urgent if less than 3 days
     };
 
+    // Save the new task to AsyncStorage
+    AsyncStorage.getItem("tasks").then((data) => {
+      const existingTasks = data ? JSON.parse(data) : [];
+
+      // Add new task and sort them chronologically by date
+      const updatedTasks = [...existingTasks, newTask].sort((a, b) => {
+        return new Date(a.date).getTime() - new Date(b.date).getTime();
+      });
+
+      AsyncStorage.setItem("tasks", JSON.stringify(updatedTasks));
+    });
+
     // Show success modal
     setIsModalVisible(true);
 
-    // Navigate back to ViewTasks and pass the task
+    // Navigate back after a short delay (no newTask passed via route)
     setTimeout(() => {
-      navigation.navigate("ViewTasks", { newTask });  // Pass the new task to ViewTasks
-      setIsModalVisible(false); // Close the modal after navigating
-    }, 1500); // Show the success message for 1.5 seconds
+      navigation.goBack();
+      setIsModalVisible(false);
+    }, 1500);
   };
 
   const calculateDaysRemaining = (taskDate: string) => {
@@ -42,6 +56,7 @@ export default function AddTaskScreen({ navigation }: any) {
   };
 
   return (
+    <SafeAreaView style={styles.safeArea}>
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.headerText}>Add New Task</Text>
 
@@ -108,14 +123,20 @@ export default function AddTaskScreen({ navigation }: any) {
         </View>
       </Modal>
     </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#F5F5F5",
+  },  
   container: {
     flexGrow: 1,
     padding: 20,
     backgroundColor: "#F5F5F5",
+    paddingTop: Platform.OS === "ios" ? 40 : 20,
   },
   headerText: {
     fontSize: 24,

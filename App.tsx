@@ -27,10 +27,10 @@ export default function App() {
         </Stack.Screen>
         
         {/* ViewTasksScreen */}
-        <Stack.Screen name="ViewTasks" component={ViewTasksScreen} />
+        <Stack.Screen name="ViewTasks" component={ViewTasksScreen} options={{headerShown:false}}/>
         
         {/* AddTaskScreen for adding a new task */}
-        <Stack.Screen name="AddTask" component={AddTaskScreen} />
+        <Stack.Screen name="AddTask" component={AddTaskScreen} options={{ headerShown: false }}/>
       </Stack.Navigator>
     </NavigationContainer>
   );

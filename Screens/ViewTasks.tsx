@@ -1,8 +1,11 @@
-import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, FlatList } from "react-native";
+import React, { useEffect, useState, useCallback } from "react";
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, ScrollView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useFocusEffect } from "@react-navigation/native";
+import Modal from "react-native-modal";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 type Task = {
   id: string;
@@ -18,29 +21,40 @@ const ViewTasksScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
+
 
   // Load tasks from AsyncStorage when the component mounts
-  useEffect(() => {
-    const loadTasks = async () => {
-      const storedTasks = await AsyncStorage.getItem("tasks");
-      if (storedTasks) {
-        // Ensure that the tasks are parsed correctly
-        setTasks(JSON.parse(storedTasks));
-      }
-    };
-    loadTasks();
-  }, []);  // Empty dependency ensures this runs once when the component mounts
+  useFocusEffect(
+    useCallback(() => {
+      const loadTasks = async () => {
+        const storedTasks = await AsyncStorage.getItem("tasks");
+        if (storedTasks) {
+          setTasks(JSON.parse(storedTasks));
+        } else {
+          setTasks([]); // Clear if nothing
+        }
+      };
+  
+      loadTasks();
+    }, [])
+  );
 
-  // Add new task from AddTask screen if passed via route
-  useEffect(() => {
-    if (route.params?.newTask) {
-      setTasks((prevTasks) => {
-        const updatedTasks = [...prevTasks, route.params.newTask]; // Append the new task
-        AsyncStorage.setItem("tasks", JSON.stringify(updatedTasks)); // Save the updated tasks list
-        return updatedTasks;
-      });
+  const confirmDeleteTask = (taskId: string) => {
+    setSelectedTaskId(taskId);
+    setIsDeleteModalVisible(true);
+  };
+  
+  const deleteTask = async () => {
+    if (selectedTaskId) {
+      const updatedTasks = tasks.filter((task) => task.id !== selectedTaskId);
+      setTasks(updatedTasks);
+      await AsyncStorage.setItem("tasks", JSON.stringify(updatedTasks));
+      setIsDeleteModalVisible(false);
+      setSelectedTaskId(null);
     }
-  }, [route.params?.newTask]); // This will trigger whenever a new task is passed via route
+  };  
 
   const renderTaskItem = ({ item }: { item: Task }) => (
     <View style={[styles.taskCard, { borderLeftColor: item.selectedColor || "#000" }]}>
@@ -50,33 +64,51 @@ const ViewTasksScreen = () => {
           {item.date} {item.urgent && `• ${item.daysRemaining} days remaining`}
         </Text>
       </View>
-      <TouchableOpacity>
+      <TouchableOpacity onPress={() => confirmDeleteTask(item.id)}>
         <Ionicons name="ellipsis-horizontal" size={24} color="black" />
       </TouchableOpacity>
     </View>
   );
 
   return (
-    <View style={styles.container}>
-      {/* Header */}
+    <SafeAreaView style={styles.safeArea}>
+
+<FlatList
+  data={tasks}
+  renderItem={renderTaskItem}
+  keyExtractor={(item) => item.id}
+  contentContainerStyle={styles.listContainer}
+  ListHeaderComponent={
+    <>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 8 }}>
           <Ionicons name="arrow-back" size={24} color="black" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>View Tasks</Text>
-        <TouchableOpacity onPress={() => navigation.navigate("AddTask")}>
+        <TouchableOpacity onPress={() => navigation.navigate("AddTask")} style={{ padding: 8 }}>
           <Ionicons name="add-circle-outline" size={28} color="black" />
         </TouchableOpacity>
       </View>
 
-      {/* Task Lists */}
       <Text style={styles.sectionTitle}>Tasks</Text>
-      <FlatList
-        data={tasks}
-        renderItem={renderTaskItem}
-        keyExtractor={(item) => item.id}
-      />
-    </View>
+    </>
+  }
+/>
+
+    <Modal isVisible={isDeleteModalVisible} onBackdropPress={() => setIsDeleteModalVisible(false)}>
+      <View style={styles.modalContent}>
+        <Text style={styles.modalText}>Are you sure you want to delete this task?</Text>
+        <View style={{ flexDirection: "row", justifyContent: "space-around", marginTop: 20 }}>
+          <TouchableOpacity onPress={deleteTask}>
+            <Text style={{ color: "red", fontWeight: "bold" }}>Yes</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => setIsDeleteModalVisible(false)}>
+            <Text style={{ color: "green", fontWeight: "bold" }}>Cancel</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+    </SafeAreaView>
   );
 };
 
@@ -101,6 +133,11 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginVertical: 10,
   },
+  listContainer: {
+    padding: 20,
+    backgroundColor: "#F5F5F5",
+    flexGrow: 1,
+  },  
   taskCard: {
     backgroundColor: "#FFF",
     padding: 15,
@@ -127,6 +164,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#D32F2F",
     fontWeight: "bold",
+  },
+  modalContent: {
+    backgroundColor: "white",
+    padding: 20,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  modalText: {
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  safeArea: {
+    flex: 1,
   },
 });
 
