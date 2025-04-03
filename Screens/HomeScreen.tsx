@@ -2,35 +2,35 @@ import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image } from "react-native";
 import { RouteProp, useNavigation } from "@react-navigation/native";
 import { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
-import { Ionicons } from "@expo/vector-icons"; // For icons
+import { Ionicons } from "@expo/vector-icons";
 
 // Define the tab param list
 type TabParamList = {
   Home: { username: string };
-  Calgary: undefined;
-  Edmonton: undefined;
+  Profile: { username: string };
 };
 
 type HomeScreenRouteProp = RouteProp<TabParamList, "Home">;
-type NavigationProp = BottomTabNavigationProp<TabParamList, "Home">;
+type NavigationProp = BottomTabNavigationProp<any>;
 
 const HomeScreen = ({ route }: { route: HomeScreenRouteProp }) => {
   const { username } = route.params;
   const navigation = useNavigation<NavigationProp>();
 
   const handleViewTasks = () => {
-    // Navigate to ViewTasks screen
     navigation.navigate("ViewTasks");
   };
 
   const handleAddTask = () => {
-    // Navigate to AddTask screen
     navigation.navigate("AddTask");
   };
 
   const handleAssignTask = () => {
-    // Navigate to AssignTask screen
     navigation.navigate("AssignTask");
+  };
+
+  const handleProgress = () => {
+    navigation.navigate("Progress"); 
   };
 
   return (
@@ -48,7 +48,7 @@ const HomeScreen = ({ route }: { route: HomeScreenRouteProp }) => {
 
       {/* Progress and Recent Buttons */}
       <View style={styles.buttonRow}>
-        <TouchableOpacity style={styles.progressButton}>
+        <TouchableOpacity style={styles.progressButton} onPress={handleProgress}>
           <Text style={styles.buttonText}>Progress</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.recentButton}>
@@ -72,13 +72,11 @@ const HomeScreen = ({ route }: { route: HomeScreenRouteProp }) => {
         <Ionicons name="arrow-forward" size={20} color="black" />
       </TouchableOpacity>
 
-      {/* Add Task Button */}
       <TouchableOpacity style={styles.actionButton} onPress={handleAddTask}>
         <Text style={styles.actionButtonText}>Add Tasks</Text>
         <Ionicons name="add" size={20} color="black" />
       </TouchableOpacity>
 
-      {/* Assign Task Button */}
       <TouchableOpacity style={styles.actionButton} onPress={handleAssignTask}>
         <Text style={styles.actionButtonText}>Assign Task</Text>
         <Ionicons name="person-add" size={20} color="black" />

@@ -1,7 +1,13 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, ScrollView } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  FlatList,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useNavigation, useRoute } from "@react-navigation/native";
+import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
 import Modal from "react-native-modal";
@@ -15,16 +21,15 @@ type Task = {
   selectedColor: string | null;
   daysRemaining: number;
   urgent: boolean;
+  completed?: boolean;
 };
 
 const ViewTasksScreen = () => {
-  const navigation = useNavigation();
-  const route = useRoute();
+  const navigation = useNavigation<any>();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
 
-  // Load tasks from AsyncStorage when the component mounts
   useFocusEffect(
     useCallback(() => {
       const loadTasks = async () => {
@@ -32,10 +37,9 @@ const ViewTasksScreen = () => {
         if (storedTasks) {
           setTasks(JSON.parse(storedTasks));
         } else {
-          setTasks([]); // Clear if nothing
+          setTasks([]);
         }
       };
-
       loadTasks();
     }, [])
   );
@@ -55,17 +59,56 @@ const ViewTasksScreen = () => {
     }
   };
 
+  const markTaskComplete = async (taskId: string) => {
+    const updatedTasks = tasks.map((task) =>
+      task.id === taskId ? { ...task, completed: true } : task
+    );
+    setTasks(updatedTasks);
+    await AsyncStorage.setItem("tasks", JSON.stringify(updatedTasks));
+    setSelectedTaskId(null);
+
+    // ✅ Navigate to TaskCompletion
+    navigation.navigate("TaskComplete", { taskId });
+  };
+
   const renderTaskItem = ({ item }: { item: Task }) => (
-    <View style={[styles.taskCard, { borderLeftColor: item.selectedColor || "#000" }]}>
+    <View
+      style={[
+        styles.taskCard,
+        { borderLeftColor: item.selectedColor || "#000" },
+      ]}
+    >
       <View>
         <Text style={styles.taskTitle}>{item.title}</Text>
         <Text style={item.urgent ? styles.urgentDate : styles.taskDate}>
           {item.date} {item.urgent && `• ${item.daysRemaining} days remaining`}
         </Text>
       </View>
-      <TouchableOpacity onPress={() => confirmDeleteTask(item.id)}>
+
+      <TouchableOpacity
+        onPress={() =>
+          setSelectedTaskId((prev) => (prev === item.id ? null : item.id))
+        }
+      >
         <Ionicons name="ellipsis-horizontal" size={24} color="black" />
       </TouchableOpacity>
+
+      {selectedTaskId === item.id && (
+        <View style={styles.actionButtons}>
+          <TouchableOpacity
+            style={[styles.actionButton, { backgroundColor: "#D32F2F" }]}
+            onPress={() => confirmDeleteTask(item.id)}
+          >
+            <Ionicons name="trash" size={20} color="white" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.actionButton, { backgroundColor: "#4CAF50" }]}
+            onPress={() => markTaskComplete(item.id)}
+          >
+            <Ionicons name="checkmark" size={20} color="white" />
+          </TouchableOpacity>
+        </View>
+      )}
     </View>
   );
 
@@ -93,7 +136,11 @@ const ViewTasksScreen = () => {
         }
       />
 
-      <Modal isVisible={isDeleteModalVisible} onBackdropPress={() => setIsDeleteModalVisible(false)} style={styles.modal}>
+      <Modal
+        isVisible={isDeleteModalVisible}
+        onBackdropPress={() => setIsDeleteModalVisible(false)}
+        style={styles.modal}
+      >
         <View style={styles.modalContent}>
           <Text style={styles.modalText}>Confirm deletion of task:</Text>
           {selectedTaskId && (
@@ -107,10 +154,16 @@ const ViewTasksScreen = () => {
             </>
           )}
           <View style={styles.modalButtons}>
-            <TouchableOpacity onPress={deleteTask} style={[styles.modalButton, styles.confirmButton]}>
+            <TouchableOpacity
+              onPress={deleteTask}
+              style={[styles.modalButton, styles.confirmButton]}
+            >
               <Text style={styles.modalButtonText}>Confirm</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => setIsDeleteModalVisible(false)} style={[styles.modalButton, styles.cancelButton]}>
+            <TouchableOpacity
+              onPress={() => setIsDeleteModalVisible(false)}
+              style={[styles.modalButton, styles.cancelButton]}
+            >
               <Text style={styles.modalButtonText}>Cancel</Text>
             </TouchableOpacity>
           </View>
@@ -149,9 +202,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFF",
     padding: 15,
     borderRadius: 10,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: "column",
     marginBottom: 10,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
@@ -172,10 +223,21 @@ const styles = StyleSheet.create({
     color: "#D32F2F",
     fontWeight: "bold",
   },
+  actionButtons: {
+    flexDirection: "row",
+    marginTop: 10,
+    justifyContent: "flex-end",
+    gap: 10,
+  },
+  actionButton: {
+    padding: 10,
+    borderRadius: 8,
+    marginLeft: 10,
+  },
   modal: {
     justifyContent: "center",
     alignItems: "center",
-    margin: 0, // Ensures modal is centered on the screen
+    margin: 0,
   },
   modalContent: {
     backgroundColor: "#FFFFFF",
@@ -225,7 +287,7 @@ const styles = StyleSheet.create({
   modalButtonText: {
     color: "#FFFFFF",
     fontWeight: "bold",
-    fontSize: 14, // Adjusted font size for better readability
+    fontSize: 14,
   },
 });
 
