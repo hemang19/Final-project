@@ -9,7 +9,7 @@ export default function AddTaskScreen({ navigation }: any) {
   const [taskName, setTaskName] = useState("");
   const [selectedDate, setSelectedDate] = useState(null);
   const [assignedEmail, setAssignedEmail] = useState("");
-  const [selectedColor, setSelectedColor] = useState(null);
+  const [selectedColor, setSelectedColor] = useState("#F5F5F5");
   const [isModalVisible, setIsModalVisible] = useState(false);
 
   const colors = ["#F5C6D6", "#B4E1C5", "#B5D8E8", "#C2AFF0", "#F4D58D"];
@@ -23,14 +23,14 @@ export default function AddTaskScreen({ navigation }: any) {
       assignedEmail: assignedEmail,
       selectedColor: selectedColor,
       daysRemaining: calculateDaysRemaining(selectedDate),
-      urgent: calculateDaysRemaining(selectedDate) <= 3, // Urgent if less than 3 days
+      urgent: calculateDaysRemaining(selectedDate) <= 3,
     };
 
-    // Save the new task to AsyncStorage
+    
     AsyncStorage.getItem("tasks").then((data) => {
       const existingTasks = data ? JSON.parse(data) : [];
 
-      // Add new task and sort them chronologically by date
+      
       const updatedTasks = [...existingTasks, newTask].sort((a, b) => {
         return new Date(a.date).getTime() - new Date(b.date).getTime();
       });
@@ -38,10 +38,10 @@ export default function AddTaskScreen({ navigation }: any) {
       AsyncStorage.setItem("tasks", JSON.stringify(updatedTasks));
     });
 
-    // Show success modal
+   
     setIsModalVisible(true);
 
-    // Navigate back after a short delay (no newTask passed via route)
+   
     setTimeout(() => {
       navigation.goBack();
       setIsModalVisible(false);
@@ -52,11 +52,11 @@ export default function AddTaskScreen({ navigation }: any) {
     const dueDate = new Date(taskDate);
     const currentDate = new Date();
     const timeDifference = dueDate.getTime() - currentDate.getTime();
-    return Math.ceil(timeDifference / (1000 * 3600 * 24)); // Convert milliseconds to days
+    return Math.ceil(timeDifference / (1000 * 3600 * 24));
   };
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: selectedColor || "#F5F5F5" }]}>
+    <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.headerText}>Add New Task</Text>
 
@@ -82,7 +82,7 @@ export default function AddTaskScreen({ navigation }: any) {
             <TouchableOpacity
               key={index}
               style={[styles.colorOption, { backgroundColor: color }, selectedColor === color && styles.selectedColor]}
-              onPress={() => setSelectedColor(color)}
+              onPress={() => setSelectedColor(color)} 
             />
           ))}
         </View>
@@ -105,7 +105,12 @@ export default function AddTaskScreen({ navigation }: any) {
 
           <TouchableOpacity
             style={[styles.button, styles.cancelButton]}
-            onPress={() => navigation.goBack()}
+            onPress={() => {
+              setTaskName("");
+              setSelectedDate(null);
+              setAssignedEmail("");
+              setSelectedColor("#F5F5F5");
+            }}
           >
             <Text style={styles.buttonText}>Cancel</Text>
           </TouchableOpacity>
@@ -118,6 +123,9 @@ export default function AddTaskScreen({ navigation }: any) {
           </View>
         </Modal>
       </ScrollView>
+
+      {/* Apply the selected color only to the form container */}
+      <View style={[styles.colorContainer, { backgroundColor: selectedColor }]} />
     </SafeAreaView>
   );
 }
@@ -203,5 +211,13 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     marginBottom: 10,
+  },
+  colorContainer: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 0, 
+    zIndex: -1,
   },
 });

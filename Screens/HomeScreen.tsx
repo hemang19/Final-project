@@ -7,7 +7,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback, useState } from "react";
 
-// Define the tab param list
+
 type TabParamList = {
   Home: { username: string };
   Profile: { username: string };
@@ -62,7 +62,7 @@ const HomeScreen = ({ route }: { route: HomeScreenRouteProp }) => {
             return new Date(a.date).getTime() - new Date(b.date).getTime();
           });
   
-          setUpcomingTasks(sortedTasks.slice(0, 4)); // Limit to first 4 tasks
+          setUpcomingTasks(sortedTasks.slice(0, 4));
         }
       };
   
