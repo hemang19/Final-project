@@ -5,7 +5,7 @@ import { Calendar } from "react-native-calendars";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-export default function AddTaskScreen({ navigation }: any) {
+export default function AddTaskScreen({ navigation }) {
   const [taskName, setTaskName] = useState("");
   const [selectedDate, setSelectedDate] = useState(null);
   const [assignedEmail, setAssignedEmail] = useState("");
@@ -15,7 +15,6 @@ export default function AddTaskScreen({ navigation }: any) {
   const colors = ["#F5C6D6", "#B4E1C5", "#B5D8E8", "#C2AFF0", "#F4D58D"];
 
   const handleCreateTask = () => {
-    // Create the task object
     const newTask = {
       id: Math.random().toString(),
       title: taskName,
@@ -26,33 +25,32 @@ export default function AddTaskScreen({ navigation }: any) {
       urgent: calculateDaysRemaining(selectedDate) <= 3,
     };
 
-    
     AsyncStorage.getItem("tasks").then((data) => {
       const existingTasks = data ? JSON.parse(data) : [];
-
-      
-      const updatedTasks = [...existingTasks, newTask].sort((a, b) => {
-        return new Date(a.date).getTime() - new Date(b.date).getTime();
-      });
-
+      const updatedTasks = [...existingTasks, newTask].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
       AsyncStorage.setItem("tasks", JSON.stringify(updatedTasks));
     });
 
-   
     setIsModalVisible(true);
-
-   
     setTimeout(() => {
       navigation.goBack();
       setIsModalVisible(false);
     }, 1500);
   };
 
-  const calculateDaysRemaining = (taskDate: string) => {
+  const calculateDaysRemaining = (taskDate) => {
     const dueDate = new Date(taskDate);
     const currentDate = new Date();
     const timeDifference = dueDate.getTime() - currentDate.getTime();
     return Math.ceil(timeDifference / (1000 * 3600 * 24));
+  };
+
+  const handleCancel = () => {
+    setTaskName("");
+    setSelectedDate(null);
+    setAssignedEmail("");
+    setSelectedColor("#F5F5F5");
+    navigation.goBack();
   };
 
   return (
@@ -70,9 +68,7 @@ export default function AddTaskScreen({ navigation }: any) {
         <Text style={styles.label}>Select Due Date:</Text>
         <Calendar
           onDayPress={(day) => setSelectedDate(day.dateString)}
-          markedDates={
-            selectedDate ? { [selectedDate]: { selected: true, selectedColor: "#4CAF50" } } : {}
-          }
+          markedDates={selectedDate ? { [selectedDate]: { selected: true, selectedColor: "#4CAF50" } } : {}}
           style={styles.calendar}
         />
 
@@ -82,7 +78,7 @@ export default function AddTaskScreen({ navigation }: any) {
             <TouchableOpacity
               key={index}
               style={[styles.colorOption, { backgroundColor: color }, selectedColor === color && styles.selectedColor]}
-              onPress={() => setSelectedColor(color)} 
+              onPress={() => setSelectedColor(color)}
             />
           ))}
         </View>
@@ -102,30 +98,20 @@ export default function AddTaskScreen({ navigation }: any) {
           >
             <Text style={styles.buttonText}>Create Task</Text>
           </TouchableOpacity>
-
           <TouchableOpacity
             style={[styles.button, styles.cancelButton]}
-            onPress={() => {
-              setTaskName("");
-              setSelectedDate(null);
-              setAssignedEmail("");
-              setSelectedColor("#F5F5F5");
-            }}
+            onPress={handleCancel}
           >
             <Text style={styles.buttonText}>Cancel</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Modal to show confirmation */}
         <Modal isVisible={isModalVisible} onBackdropPress={() => setIsModalVisible(false)}>
           <View style={styles.modalContent}>
             <Text style={styles.modalText}>Task has been successfully added!</Text>
           </View>
         </Modal>
       </ScrollView>
-
-      {/* Apply the selected color only to the form container */}
-      <View style={[styles.colorContainer, { backgroundColor: selectedColor }]} />
     </SafeAreaView>
   );
 }
@@ -211,13 +197,5 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     marginBottom: 10,
-  },
-  colorContainer: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 0, 
-    zIndex: -1,
-  },
+  }
 });

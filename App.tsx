@@ -18,7 +18,7 @@ type RootStackParamList = {
   AddTask: undefined;
   AssignTask: undefined;
   Progress: undefined;
-  TaskComplete: { taskId: string }; // ✅ Add this route type
+  TaskComplete: { taskId: string };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -43,3 +43,5 @@ export default function App() {
     </NavigationContainer>
   );
 }
+
+

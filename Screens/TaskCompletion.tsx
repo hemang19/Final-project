@@ -21,7 +21,7 @@ type Task = {
 const TaskCompletionScreen = () => {
   const route = useRoute();
   const navigation = useNavigation();
-  const { taskId } = route.params as { taskId: string };
+  const { taskId, username } = route.params as { taskId: string; username: string };
 
   const [dateToday, setDateToday] = useState("");
   const [completedTask, setCompletedTask] = useState<Task | null>(null);
@@ -59,23 +59,25 @@ const TaskCompletionScreen = () => {
     </View>
   );
 
+  const handleHome = () => {
+    navigation.navigate("Home", { username });
+  };
+
   return (
     <SafeAreaView style={styles.container}>
-      {/* Date & Add Button */}
+      {/* Header with back and add */}
       <View style={styles.header}>
-      <TouchableOpacity onPress={() => navigation.navigate("ViewTasks")} style={{ padding: 8 }}>
-        <Ionicons name="arrow-back" size={24} color="black" />
-      </TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate("ViewTasks")} style={{ padding: 8 }}>
+          <Ionicons name="arrow-back" size={24} color="black" />
+        </TouchableOpacity>
         <Text style={styles.headerTitle}>Task Summary</Text>
         <TouchableOpacity onPress={() => navigation.navigate("AddTask")} style={{ padding: 8 }}>
           <Ionicons name="add-circle-outline" size={28} color="black" />
         </TouchableOpacity>
       </View>
 
-
       <Text style={styles.subtitle}>Tasks due this month</Text>
       <Text style={styles.date}>{dateToday}</Text>
-
 
       {/* Task Complete Message */}
       <Text style={styles.success}>Task complete 🎉</Text>
@@ -95,6 +97,11 @@ const TaskCompletionScreen = () => {
           />
         </>
       )}
+
+      {/* 🏠 Home Button */}
+      <TouchableOpacity style={styles.homeButton} onPress={handleHome}>
+        <Text style={styles.homeButtonText}>🏠 Home</Text>
+      </TouchableOpacity>
     </SafeAreaView>
   );
 };
@@ -159,5 +166,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#777",
     marginTop: 4,
+  },
+  homeButton: {
+    backgroundColor: "#4CAF50",
+    paddingVertical: 12,
+    borderRadius: 10,
+    marginTop: 20,
+    alignItems: "center",
+  },
+  homeButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
   },
 });
