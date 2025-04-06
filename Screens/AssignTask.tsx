@@ -11,16 +11,38 @@ const AssignTaskScreen = () => {
   const [taskName, setTaskName] = useState("");
   const [description, setDescription] = useState("");
   
-  const handleSend = () => {
-    // Here, we simulate sending an email (you can later integrate actual email functionality)
-    console.log(`Sending Task to ${email}:\nTask: ${taskName}\nDescription: ${description}`);
-    
-    // After sending, navigate back to Home Screen or show confirmation
-    navigation.goBack();  // Go back to the home screen
-  };
+  const handleSend = async () => {
+    try {
+      // update the url to your IPV4 address
+      const response = await fetch("http://192.168.1.73:5000/send-invite", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          to: email,
+          from: "Deadlinez",
+          taskName,
+          description,
+        }),
+      });
+  
+      const data = await response.json();
+      if (response.ok) {
+        alert("Email sent successfully!");
+        navigation.goBack();
+      } else {
+        alert("Failed to send: " + data.error);
+      }
+    } catch (err) {
+      console.error("Error sending email", err);
+      alert("Network error.");
+    }
+  };  
 
   return (
     <View style={styles.container}>
+      <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+        <Ionicons name="arrow-back" size={24} color="black" />
+      </TouchableOpacity>
       <Text style={styles.header}>Assign Task</Text>
       
       {/* Input for email */}
