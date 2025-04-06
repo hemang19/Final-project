@@ -1,55 +1,28 @@
-import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image } from "react-native";
-import { RouteProp, useNavigation } from "@react-navigation/native";
-import { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
+import React, { useState, useCallback } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  FlatList,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useNavigation, useRoute, useFocusEffect } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useFocusEffect } from "@react-navigation/native";
-import { useCallback, useState } from "react";
-
-
-type TabParamList = {
-  Home: { username: string };
-  Profile: { username: string };
-};
-
-type HomeScreenRouteProp = RouteProp<TabParamList, "Home">;
-type NavigationProp = BottomTabNavigationProp<any>;
 
 type Task = {
   id: string;
   title: string;
   date: string;
-  daysRemaining: number;
-  urgent: boolean;
-  selectedColor: string | null;
+  completed?: boolean;
 };
 
-const HomeScreen = ({ route }: { route: HomeScreenRouteProp }) => {
-  const { username } = route.params;
-  const navigation = useNavigation<NavigationProp>();
+const HomeScreen = () => {
+  const navigation = useNavigation<any>();
+  const route = useRoute();
+  const { username } = route.params as { username: string };
 
   const [upcomingTasks, setUpcomingTasks] = useState<Task[]>([]);
-
-  const handleViewTasks = () => {
-    navigation.navigate("ViewTasks");
-  };
-
-  const handleAddTask = () => {
-    navigation.navigate("AddTask");
-  };
-
-  const handleAssignTask = () => {
-    navigation.navigate("AssignTask");
-  };
-
-  const handleProgress = () => {
-    navigation.navigate("Progress"); 
-  };
-
-  const handleRecent = () => {
-    navigation.navigate("RecentTasks");
-  };  
 
   useFocusEffect(
     useCallback(() => {
@@ -57,78 +30,85 @@ const HomeScreen = ({ route }: { route: HomeScreenRouteProp }) => {
         const storedTasks = await AsyncStorage.getItem("tasks");
         if (storedTasks) {
           const parsedTasks: Task[] = JSON.parse(storedTasks);
-  
-          const sortedTasks = parsedTasks.sort((a, b) => {
-            return new Date(a.date).getTime() - new Date(b.date).getTime();
-          });
-  
+
+          // ✅ Only include tasks that are NOT completed
+          const filteredTasks = parsedTasks.filter((task) => !task.completed);
+
+          // Sort by date ascending
+          const sortedTasks = filteredTasks.sort(
+            (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+          );
+
+          // Show up to 4 tasks
           setUpcomingTasks(sortedTasks.slice(0, 4));
         }
       };
-  
+
       loadTasks();
     }, [])
-  );  
+  );
+
+  const renderTask = ({ item }: { item: Task }) => (
+    <View style={styles.taskCard}>
+      <Text style={styles.taskTitle}>{item.title}</Text>
+      <Text style={styles.taskDate}>{item.date}</Text>
+    </View>
+  );
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      {/* Greeting Section */}
-      <View style={styles.header}>
-        <Text style={styles.greeting}>Good Morning, {username}!</Text>
-        <TouchableOpacity>
-          <Image
-            source={{ uri: "https://cdn-icons-png.flaticon.com/512/147/147144.png" }}
-            style={styles.avatar}
-          />
-        </TouchableOpacity>
-      </View>
+    <View style={styles.container}>
+      <Text style={styles.greeting}>Good Morning, {username}!</Text>
 
-      {/* Progress and Recent Buttons */}
       <View style={styles.buttonRow}>
-        <TouchableOpacity style={styles.progressButton} onPress={handleProgress}>
+        <TouchableOpacity
+          style={styles.progressButton}
+          onPress={() => navigation.navigate("Progress")}
+        >
           <Text style={styles.buttonText}>Progress</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.recentButton} onPress={handleRecent}>
+        <TouchableOpacity
+          style={styles.recentButton}
+          onPress={() => navigation.navigate("RecentTasks")}
+        >
           <Text style={styles.buttonText}>Recent</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Upcoming Tasks */}
-      <View style={styles.taskCard}>
-        <Text style={styles.taskTitle}>Upcoming Tasks</Text>
-          {upcomingTasks.map((task) => (
-            <View key={task.id} style={styles.taskItem}>
-              <Text style={styles.taskName}>{task.title}</Text>
-              <Text style={task.urgent ? styles.taskDeadlineUrgent : styles.taskDeadline}>
-                {task.date} {task.urgent && `• ${task.daysRemaining} days remaining`}
-              </Text>
-            </View>
-          ))}
-
-        {upcomingTasks.length >= 4 && (
-          <TouchableOpacity onPress={() => navigation.navigate("ViewTasks")}>
-            <Text style={styles.viewMore}>View More</Text>
-          </TouchableOpacity>
-        )}
+      <View style={styles.taskListContainer}>
+        <Text style={styles.sectionTitle}>Upcoming Tasks</Text>
+        <FlatList
+          data={upcomingTasks}
+          renderItem={renderTask}
+          keyExtractor={(item) => item.id}
+          ListEmptyComponent={
+            <Text style={styles.emptyText}>No upcoming tasks for now.</Text>
+          }
+        />
       </View>
 
-      {/* Start Your Day Section */}
-      <Text style={styles.startYourDayText}>Start your day</Text>
-      <TouchableOpacity style={styles.actionButton} onPress={handleViewTasks}>
-        <Text style={styles.actionButtonText}>View Tasks</Text>
-        <Ionicons name="arrow-forward" size={20} color="black" />
+      <Text style={styles.sectionTitle}>Start your day</Text>
+      <TouchableOpacity
+        style={styles.linkRow}
+        onPress={() => navigation.navigate("ViewTasks")}
+      >
+        <Text style={styles.linkText}>View Tasks</Text>
+        <Ionicons name="arrow-forward" size={20} />
       </TouchableOpacity>
-
-      <TouchableOpacity style={styles.actionButton} onPress={handleAddTask}>
-        <Text style={styles.actionButtonText}>Add Tasks</Text>
-        <Ionicons name="add" size={20} color="black" />
+      <TouchableOpacity
+        style={styles.linkRow}
+        onPress={() => navigation.navigate("AddTask")}
+      >
+        <Text style={styles.linkText}>Add Tasks</Text>
+        <Ionicons name="add" size={20} />
       </TouchableOpacity>
-
-      <TouchableOpacity style={styles.actionButton} onPress={handleAssignTask}>
-        <Text style={styles.actionButtonText}>Assign Task</Text>
-        <Ionicons name="person-add" size={20} color="black" />
+      <TouchableOpacity
+        style={styles.linkRow}
+        onPress={() => navigation.navigate("AssignTask")}
+      >
+        <Text style={styles.linkText}>Assign Task</Text>
+        <Ionicons name="person-add" size={20} />
       </TouchableOpacity>
-    </ScrollView>
+    </View>
   );
 };
 
@@ -136,108 +116,89 @@ export default HomeScreen;
 
 const styles = StyleSheet.create({
   container: {
-    flexGrow: 1,
+    flex: 1,
+    backgroundColor: "#F9F9F9",
     padding: 20,
-    backgroundColor: "#F5F5F5",
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 20,
   },
   greeting: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: "bold",
-  },
-  avatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    marginBottom: 20,
   },
   buttonRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 20,
+    marginBottom: 25,
   },
   progressButton: {
+    backgroundColor: "#1E90FF",
     flex: 1,
-    padding: 15,
-    backgroundColor: "#007AFF",
-    borderRadius: 10,
+    padding: 12,
+    borderRadius: 8,
     alignItems: "center",
     marginRight: 10,
   },
   recentButton: {
+    backgroundColor: "#32CD32",
     flex: 1,
-    padding: 15,
-    backgroundColor: "#34C759",
-    borderRadius: 10,
+    padding: 12,
+    borderRadius: 8,
     alignItems: "center",
   },
   buttonText: {
-    color: "#FFF",
+    color: "#fff",
     fontWeight: "bold",
+  },
+  taskListContainer: {
+    backgroundColor: "#fff",
+    padding: 15,
+    borderRadius: 10,
+    marginBottom: 25,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 1 },
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    marginBottom: 10,
   },
   taskCard: {
-    backgroundColor: "#FFF",
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  taskTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 10,
-  },
-  taskItem: {
-    backgroundColor: "#E3F2FD",
+    backgroundColor: "#E6F0FA",
     padding: 10,
     borderRadius: 8,
+    marginBottom: 10,
   },
-  taskName: {
+  taskTitle: {
     fontSize: 16,
     fontWeight: "bold",
   },
-  taskDeadline: {
+  taskDate: {
     fontSize: 14,
-    color: "#D32F2F",
+    color: "#FF3B30",
   },
-  startYourDayText: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 10,
+  emptyText: {
+    textAlign: "center",
+    color: "#888",
+    fontStyle: "italic",
   },
-  actionButton: {
+  linkRow: {
     flexDirection: "row",
     justifyContent: "space-between",
+    backgroundColor: "#fff",
     padding: 15,
-    backgroundColor: "#FFF",
     borderRadius: 10,
-    alignItems: "center",
-    marginBottom: 10,
+    marginBottom: 12,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowOpacity: 0.03,
+    shadowOffset: { width: 0, height: 1 },
+    shadowRadius: 3,
+    elevation: 1,
   },
-  actionButtonText: {
+  linkText: {
     fontSize: 16,
-    fontWeight: "bold",
-  },
-  viewMore: {
-    marginTop: 10,
-    color: "#007AFF",
-    fontWeight: "bold",
-    textAlign: "right",
-  },
-  taskDeadlineUrgent: {
-    fontSize: 14,
-    color: "#D32F2F",
-    fontWeight: "bold",
+    fontWeight: "500",
   },
 });

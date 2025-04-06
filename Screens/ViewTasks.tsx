@@ -36,7 +36,7 @@ const ViewTasksScreen = () => {
         const storedTasks = await AsyncStorage.getItem("tasks");
         if (storedTasks) {
           const parsedTasks = JSON.parse(storedTasks);
-          const incompleteTasks = parsedTasks.filter((task: Task) => !task.completed); // ✅ only show uncompleted
+          const incompleteTasks = parsedTasks.filter((task: Task) => !task.completed);
           setTasks(incompleteTasks);
         } else {
           setTasks([]);

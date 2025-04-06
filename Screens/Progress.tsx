@@ -15,9 +15,6 @@ import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const getDaysInMonth = (month: number, year: number) =>
-  new Date(year, month, 0).getDate();
-
 const ProgressScreen = () => {
   const currentMonth = new Date().getMonth() + 1;
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
@@ -27,6 +24,7 @@ const ProgressScreen = () => {
     labels: [],
     data: [],
   });
+
   const navigation = useNavigation();
 
   const months = [
@@ -50,24 +48,32 @@ const ProgressScreen = () => {
       const tasks = stored ? JSON.parse(stored) : [];
 
       const year = new Date().getFullYear();
-      const filtered = tasks.filter((t: any) => {
+
+      // Tasks due in the selected month
+      const dueTasks = tasks.filter((t: any) => {
         const date = new Date(t.date);
         return date.getMonth() + 1 === selectedMonth && date.getFullYear() === year;
       });
 
-      const completed = filtered.filter((t: any) => t.completed === true);
+      // Tasks completed in the selected month based on completedDate
+      const completedTasks = tasks.filter((t: any) => {
+        if (!t.completed || !t.completedDate) return false;
+        const compDate = new Date(t.completedDate);
+        return compDate.getMonth() + 1 === selectedMonth && compDate.getFullYear() === year;
+      });
 
+      // Chart: count how many were completed on each day
       const dayMap: { [day: number]: number } = {};
-      completed.forEach((t: any) => {
-        const day = new Date(t.date).getDate();
+      completedTasks.forEach((t: any) => {
+        const day = new Date(t.completedDate).getDate();
         dayMap[day] = (dayMap[day] || 0) + 1;
       });
 
       const labels = Object.keys(dayMap).map((day) => day.toString());
       const data = Object.values(dayMap);
 
-      setTasksDue(filtered.length);
-      setTasksComplete(completed.length);
+      setTasksDue(dueTasks.length);
+      setTasksComplete(completedTasks.length);
       setChartData({ labels, data });
     };
 
@@ -76,66 +82,66 @@ const ProgressScreen = () => {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
-    <ScrollView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 8 }}>
-          <Ionicons name="arrow-back" size={24} color="black" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>My Progress</Text>
-        <View style={{ width: 32 }} />
-      </View>
-
-      {/* Profile image */}
-      <Image
-        source={{ uri: "https://cdn-icons-png.flaticon.com/512/147/147144.png" }}
-        style={styles.avatar}
-      />
-
-      {/* Month selector */}
-      <RNPickerSelect
-        onValueChange={(value) => setSelectedMonth(value)}
-        value={selectedMonth}
-        items={months}
-        placeholder={{ label: "Select a month", value: null }}
-        style={{
-          inputIOS: styles.picker,
-          inputAndroid: styles.picker,
-        }}
-      />
-
-      {/* Stats */}
-      <Text style={styles.stats}>
-        Total tasks due in {months[selectedMonth - 1].label}: {tasksDue}
-      </Text>
-      <Text style={styles.stats}>Total tasks complete: {tasksComplete}</Text>
-
-      {/* Chart */}
-      {chartData.data.length > 0 && (
-        <View style={styles.chartWrapper}>
-          <BarChart
-            data={{
-              labels: chartData.labels,
-              datasets: [{ data: chartData.data }],
-            }}
-            width={Dimensions.get("window").width - 40}
-            height={220}
-            fromZero
-            showValuesOnTopOfBars
-            yAxisLabel=""
-            chartConfig={{
-              backgroundColor: "#fff",
-              backgroundGradientFrom: "#fff",
-              backgroundGradientTo: "#fff",
-              decimalPlaces: 0,
-              color: () => "#4682B4",
-              labelColor: () => "#000",
-            }}
-            style={{ borderRadius: 16 }}
-          />
+      <ScrollView style={styles.container}>
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 8 }}>
+            <Ionicons name="arrow-back" size={24} color="black" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>My Progress</Text>
+          <View style={{ width: 32 }} />
         </View>
-      )}
-    </ScrollView>
+
+        {/* Profile image */}
+        <Image
+          source={{ uri: "https://cdn-icons-png.flaticon.com/512/147/147144.png" }}
+          style={styles.avatar}
+        />
+
+        {/* Month selector */}
+        <RNPickerSelect
+          onValueChange={(value) => setSelectedMonth(value)}
+          value={selectedMonth}
+          items={months}
+          placeholder={{ label: "Select a month", value: null }}
+          style={{
+            inputIOS: styles.picker,
+            inputAndroid: styles.picker,
+          }}
+        />
+
+        {/* Stats */}
+        <Text style={styles.stats}>
+          Total tasks due in {months[selectedMonth - 1].label}: {tasksDue}
+        </Text>
+        <Text style={styles.stats}>Total tasks complete: {tasksComplete}</Text>
+
+        {/* Chart */}
+        {chartData.data.length > 0 && (
+          <View style={styles.chartWrapper}>
+            <BarChart
+              data={{
+                labels: chartData.labels,
+                datasets: [{ data: chartData.data }],
+              }}
+              width={Dimensions.get("window").width - 40}
+              height={220}
+              fromZero
+              showValuesOnTopOfBars
+              yAxisLabel=""
+              chartConfig={{
+                backgroundColor: "#fff",
+                backgroundGradientFrom: "#fff",
+                backgroundGradientTo: "#fff",
+                decimalPlaces: 0,
+                color: () => "#4682B4",
+                labelColor: () => "#000",
+              }}
+              style={{ borderRadius: 16 }}
+            />
+          </View>
+        )}
+      </ScrollView>
     </SafeAreaView>
   );
 };

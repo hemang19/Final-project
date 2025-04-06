@@ -20,7 +20,7 @@ type Task = {
 
 const TaskCompletionScreen = () => {
   const route = useRoute();
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
   const { taskId, username } = route.params as { taskId: string; username: string };
 
   const [dateToday, setDateToday] = useState("");
@@ -59,15 +59,19 @@ const TaskCompletionScreen = () => {
     </View>
   );
 
-  const handleHome = () => {
-    navigation.navigate("Home", { username });
+  const handleGoHome = () => {
+    
+    navigation.goBack();
+    setTimeout(() => {
+      navigation.goBack();
+    }, 100); 
   };
 
   return (
     <SafeAreaView style={styles.container}>
       {/* Header with back and add */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.navigate("ViewTasks")} style={{ padding: 8 }}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 8 }}>
           <Ionicons name="arrow-back" size={24} color="black" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Task Summary</Text>
@@ -99,7 +103,7 @@ const TaskCompletionScreen = () => {
       )}
 
       {/* 🏠 Home Button */}
-      <TouchableOpacity style={styles.homeButton} onPress={handleHome}>
+      <TouchableOpacity style={styles.homeButton} onPress={handleGoHome}>
         <Text style={styles.homeButtonText}>🏠 Home</Text>
       </TouchableOpacity>
     </SafeAreaView>
