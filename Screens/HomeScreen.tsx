@@ -3,6 +3,9 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image } from "rea
 import { RouteProp, useNavigation } from "@react-navigation/native";
 import { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useFocusEffect } from "@react-navigation/native";
+import { useCallback, useState } from "react";
 
 // Define the tab param list
 type TabParamList = {
@@ -13,9 +16,20 @@ type TabParamList = {
 type HomeScreenRouteProp = RouteProp<TabParamList, "Home">;
 type NavigationProp = BottomTabNavigationProp<any>;
 
+type Task = {
+  id: string;
+  title: string;
+  date: string;
+  daysRemaining: number;
+  urgent: boolean;
+  selectedColor: string | null;
+};
+
 const HomeScreen = ({ route }: { route: HomeScreenRouteProp }) => {
   const { username } = route.params;
   const navigation = useNavigation<NavigationProp>();
+
+  const [upcomingTasks, setUpcomingTasks] = useState<Task[]>([]);
 
   const handleViewTasks = () => {
     navigation.navigate("ViewTasks");
@@ -32,6 +46,29 @@ const HomeScreen = ({ route }: { route: HomeScreenRouteProp }) => {
   const handleProgress = () => {
     navigation.navigate("Progress"); 
   };
+
+  const handleRecent = () => {
+    navigation.navigate("RecentTasks");
+  };  
+
+  useFocusEffect(
+    useCallback(() => {
+      const loadTasks = async () => {
+        const storedTasks = await AsyncStorage.getItem("tasks");
+        if (storedTasks) {
+          const parsedTasks: Task[] = JSON.parse(storedTasks);
+  
+          const sortedTasks = parsedTasks.sort((a, b) => {
+            return new Date(a.date).getTime() - new Date(b.date).getTime();
+          });
+  
+          setUpcomingTasks(sortedTasks.slice(0, 4)); // Limit to first 4 tasks
+        }
+      };
+  
+      loadTasks();
+    }, [])
+  );  
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -51,7 +88,7 @@ const HomeScreen = ({ route }: { route: HomeScreenRouteProp }) => {
         <TouchableOpacity style={styles.progressButton} onPress={handleProgress}>
           <Text style={styles.buttonText}>Progress</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.recentButton}>
+        <TouchableOpacity style={styles.recentButton} onPress={handleRecent}>
           <Text style={styles.buttonText}>Recent</Text>
         </TouchableOpacity>
       </View>
@@ -59,10 +96,20 @@ const HomeScreen = ({ route }: { route: HomeScreenRouteProp }) => {
       {/* Upcoming Tasks */}
       <View style={styles.taskCard}>
         <Text style={styles.taskTitle}>Upcoming Tasks</Text>
-        <View style={styles.taskItem}>
-          <Text style={styles.taskName}>Capstone phase 1 presentation</Text>
-          <Text style={styles.taskDeadline}>March 7, 2025 - 2 days remaining</Text>
-        </View>
+          {upcomingTasks.map((task) => (
+            <View key={task.id} style={styles.taskItem}>
+              <Text style={styles.taskName}>{task.title}</Text>
+              <Text style={task.urgent ? styles.taskDeadlineUrgent : styles.taskDeadline}>
+                {task.date} {task.urgent && `• ${task.daysRemaining} days remaining`}
+              </Text>
+            </View>
+          ))}
+
+        {upcomingTasks.length >= 4 && (
+          <TouchableOpacity onPress={() => navigation.navigate("ViewTasks")}>
+            <Text style={styles.viewMore}>View More</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Start Your Day Section */}
@@ -180,6 +227,17 @@ const styles = StyleSheet.create({
   },
   actionButtonText: {
     fontSize: 16,
+    fontWeight: "bold",
+  },
+  viewMore: {
+    marginTop: 10,
+    color: "#007AFF",
+    fontWeight: "bold",
+    textAlign: "right",
+  },
+  taskDeadlineUrgent: {
+    fontSize: 14,
+    color: "#D32F2F",
     fontWeight: "bold",
   },
 });

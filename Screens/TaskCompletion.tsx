@@ -63,13 +63,19 @@ const TaskCompletionScreen = () => {
     <SafeAreaView style={styles.container}>
       {/* Date & Add Button */}
       <View style={styles.header}>
-        <Text style={styles.date}>{dateToday}</Text>
-        <TouchableOpacity onPress={() => navigation.navigate("AddTask")}>
+      <TouchableOpacity onPress={() => navigation.navigate("ViewTasks")} style={{ padding: 8 }}>
+        <Ionicons name="arrow-back" size={24} color="black" />
+      </TouchableOpacity>
+        <Text style={styles.headerTitle}>Task Summary</Text>
+        <TouchableOpacity onPress={() => navigation.navigate("AddTask")} style={{ padding: 8 }}>
           <Ionicons name="add-circle-outline" size={28} color="black" />
         </TouchableOpacity>
       </View>
 
+
       <Text style={styles.subtitle}>Tasks due this month</Text>
+      <Text style={styles.date}>{dateToday}</Text>
+
 
       {/* Task Complete Message */}
       <Text style={styles.success}>Task complete 🎉</Text>
@@ -106,6 +112,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+  },
+  headerTitle: {
+    fontSize: 22,
+    fontWeight: "bold",
   },
   date: {
     fontSize: 26,

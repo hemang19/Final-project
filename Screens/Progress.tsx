@@ -1,9 +1,19 @@
 import React, { useState, useEffect } from "react";
-import {View, Text, StyleSheet, Image, Dimensions, ScrollView,} from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  Dimensions,
+  ScrollView,
+  TouchableOpacity,
+} from "react-native";
 import RNPickerSelect from "react-native-picker-select";
 import { BarChart } from "react-native-chart-kit";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
+import { useNavigation } from "@react-navigation/native";
+import { Ionicons } from "@expo/vector-icons";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const getDaysInMonth = (month: number, year: number) =>
   new Date(year, month, 0).getDate();
@@ -13,7 +23,11 @@ const ProgressScreen = () => {
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
   const [tasksDue, setTasksDue] = useState(0);
   const [tasksComplete, setTasksComplete] = useState(0);
-  const [chartData, setChartData] = useState<number[]>([]);
+  const [chartData, setChartData] = useState<{ labels: string[]; data: number[] }>({
+    labels: [],
+    data: [],
+  });
+  const navigation = useNavigation();
 
   const months = [
     { label: "January", value: 1 },
@@ -36,37 +50,49 @@ const ProgressScreen = () => {
       const tasks = stored ? JSON.parse(stored) : [];
 
       const year = new Date().getFullYear();
-      const days = getDaysInMonth(selectedMonth, year);
-      const chartArray = new Array(days).fill(0);
-
       const filtered = tasks.filter((t: any) => {
         const date = new Date(t.date);
-        return date.getMonth() + 1 === selectedMonth;
+        return date.getMonth() + 1 === selectedMonth && date.getFullYear() === year;
       });
 
       const completed = filtered.filter((t: any) => t.completed === true);
 
+      const dayMap: { [day: number]: number } = {};
       completed.forEach((t: any) => {
         const day = new Date(t.date).getDate();
-        chartArray[day - 1]++;
+        dayMap[day] = (dayMap[day] || 0) + 1;
       });
+
+      const labels = Object.keys(dayMap).map((day) => day.toString());
+      const data = Object.values(dayMap);
 
       setTasksDue(filtered.length);
       setTasksComplete(completed.length);
-      setChartData(chartArray);
+      setChartData({ labels, data });
     };
 
     loadData();
   }, [selectedMonth]);
 
   return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
     <ScrollView style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 8 }}>
+          <Ionicons name="arrow-back" size={24} color="black" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>My Progress</Text>
+        <View style={{ width: 32 }} />
+      </View>
+
+      {/* Profile image */}
       <Image
         source={{ uri: "https://cdn-icons-png.flaticon.com/512/147/147144.png" }}
         style={styles.avatar}
       />
-      <Text style={styles.title}>My Progress</Text>
 
+      {/* Month selector */}
       <RNPickerSelect
         onValueChange={(value) => setSelectedMonth(value)}
         value={selectedMonth}
@@ -78,24 +104,19 @@ const ProgressScreen = () => {
         }}
       />
 
+      {/* Stats */}
       <Text style={styles.stats}>
         Total tasks due in {months[selectedMonth - 1].label}: {tasksDue}
       </Text>
       <Text style={styles.stats}>Total tasks complete: {tasksComplete}</Text>
 
-      {/* Only show chart if there's data > 0 */}
-      {chartData.some((val) => val > 0) && (
+      {/* Chart */}
+      {chartData.data.length > 0 && (
         <View style={styles.chartWrapper}>
           <BarChart
             data={{
-              labels: chartData.map((_, i) => {
-                const day = i + 1;
-                const lastDay = chartData.length;
-                return [1, 7, 13, 21, lastDay].includes(day)
-                  ? day.toString()
-                  : "";
-              }),
-              datasets: [{ data: chartData }],
+              labels: chartData.labels,
+              datasets: [{ data: chartData.data }],
             }}
             width={Dimensions.get("window").width - 40}
             height={220}
@@ -115,6 +136,7 @@ const ProgressScreen = () => {
         </View>
       )}
     </ScrollView>
+    </SafeAreaView>
   );
 };
 
@@ -130,11 +152,17 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     alignSelf: "center",
+    marginBottom: 10,
   },
-  title: {
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  headerTitle: {
     fontSize: 22,
     fontWeight: "bold",
-    marginTop: 20,
     textAlign: "center",
   },
   picker: {
@@ -157,5 +185,3 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
 });
-
-

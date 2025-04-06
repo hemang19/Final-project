@@ -105,12 +105,7 @@ export default function AddTaskScreen({ navigation }: any) {
 
           <TouchableOpacity
             style={[styles.button, styles.cancelButton]}
-            onPress={() => {
-              setTaskName("");
-              setSelectedDate(null);
-              setAssignedEmail("");
-              setSelectedColor(null);
-            }}
+            onPress={() => navigation.goBack()}
           >
             <Text style={styles.buttonText}>Cancel</Text>
           </TouchableOpacity>

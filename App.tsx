@@ -9,6 +9,7 @@ import AddTaskScreen from "./Screens/AddTask";
 import AssignTaskScreen from "./Screens/AssignTask";
 import ProgressScreen from "./Screens/Progress";
 import TaskCompletionScreen from "./Screens/TaskCompletion";
+import RecentTasksScreen from "./Screens/RecentTasksScreen";
 
 type RootStackParamList = {
   SignIn: undefined;
@@ -36,8 +37,8 @@ export default function App() {
         <Stack.Screen name="AddTask" component={AddTaskScreen} options={{ headerShown: false }} />
         <Stack.Screen name="AssignTask" component={AssignTaskScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Progress" component={ProgressScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="TaskComplete" component={TaskCompletionScreen} options={{ headerShown: false }}
-        />
+        <Stack.Screen name="TaskComplete" component={TaskCompletionScreen} options={{ headerShown: false }}/>
+        <Stack.Screen name="RecentTasks" component={RecentTasksScreen} options={{ headerShown: false }} />
       </Stack.Navigator>
     </NavigationContainer>
   );

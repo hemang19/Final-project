@@ -35,14 +35,16 @@ const ViewTasksScreen = () => {
       const loadTasks = async () => {
         const storedTasks = await AsyncStorage.getItem("tasks");
         if (storedTasks) {
-          setTasks(JSON.parse(storedTasks));
+          const parsedTasks = JSON.parse(storedTasks);
+          const incompleteTasks = parsedTasks.filter((task: Task) => !task.completed); // ✅ only show uncompleted
+          setTasks(incompleteTasks);
         } else {
           setTasks([]);
         }
       };
       loadTasks();
     }, [])
-  );
+  );  
 
   const confirmDeleteTask = (taskId: string) => {
     setSelectedTaskId(taskId);
@@ -66,10 +68,8 @@ const ViewTasksScreen = () => {
     setTasks(updatedTasks);
     await AsyncStorage.setItem("tasks", JSON.stringify(updatedTasks));
     setSelectedTaskId(null);
-
-    // ✅ Navigate to TaskCompletion
     navigation.navigate("TaskComplete", { taskId });
-  };
+  };  
 
   const renderTaskItem = ({ item }: { item: Task }) => (
     <View
