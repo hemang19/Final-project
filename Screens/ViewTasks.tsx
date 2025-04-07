@@ -22,6 +22,7 @@ type Task = {
   daysRemaining: number;
   urgent: boolean;
   completed?: boolean;
+  completedDate?: string; // ✅ Added this for progress tracking
 };
 
 const ViewTasksScreen = () => {
@@ -44,7 +45,7 @@ const ViewTasksScreen = () => {
       };
       loadTasks();
     }, [])
-  );  
+  );
 
   const confirmDeleteTask = (taskId: string) => {
     setSelectedTaskId(taskId);
@@ -63,13 +64,32 @@ const ViewTasksScreen = () => {
 
   const markTaskComplete = async (taskId: string) => {
     const updatedTasks = tasks.map((task) =>
-      task.id === taskId ? { ...task, completed: true } : task
+      task.id === taskId
+        ? {
+            ...task,
+            completed: true,
+            completedDate: new Date().toISOString(), // ✅ Important: this is what ProgressScreen relies on
+          }
+        : task
     );
-    setTasks(updatedTasks);
-    await AsyncStorage.setItem("tasks", JSON.stringify(updatedTasks));
+
+    // Retrieve existing tasks from AsyncStorage and merge
+    const existing = await AsyncStorage.getItem("tasks");
+    let mergedTasks: Task[] = [];
+
+    if (existing) {
+      const allTasks = JSON.parse(existing);
+      const otherTasks = allTasks.filter((t: Task) => t.id !== taskId);
+      mergedTasks = [...otherTasks, ...updatedTasks.filter((t) => t.id === taskId)];
+    } else {
+      mergedTasks = updatedTasks;
+    }
+
+    await AsyncStorage.setItem("tasks", JSON.stringify(mergedTasks));
+    setTasks(updatedTasks.filter((t) => !t.completed));
     setSelectedTaskId(null);
     navigation.navigate("TaskComplete", { taskId });
-  };  
+  };
 
   const renderTaskItem = ({ item }: { item: Task }) => (
     <View

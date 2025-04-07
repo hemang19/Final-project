@@ -17,7 +17,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 const ProgressScreen = () => {
   const currentMonth = new Date().getMonth() + 1;
-  const [selectedMonth, setSelectedMonth] = useState(currentMonth);
+  const [selectedMonth, setSelectedMonth] = useState<number | null>(currentMonth);
   const [tasksDue, setTasksDue] = useState(0);
   const [tasksComplete, setTasksComplete] = useState(0);
   const [chartData, setChartData] = useState<{ labels: string[]; data: number[] }>({
@@ -25,6 +25,7 @@ const ProgressScreen = () => {
     data: [],
   });
 
+  const [chartKey, setChartKey] = useState(0);
   const navigation = useNavigation();
 
   const months = [
@@ -44,37 +45,40 @@ const ProgressScreen = () => {
 
   useEffect(() => {
     const loadData = async () => {
-      const stored = await AsyncStorage.getItem("tasks");
-      const tasks = stored ? JSON.parse(stored) : [];
+      if (!selectedMonth) return;
 
-      const year = new Date().getFullYear();
+      try {
+        const stored = await AsyncStorage.getItem("tasks");
+        const tasks = stored ? JSON.parse(stored) : [];
+        const year = new Date().getFullYear();
 
-      // Tasks due in the selected month
-      const dueTasks = tasks.filter((t: any) => {
-        const date = new Date(t.date);
-        return date.getMonth() + 1 === selectedMonth && date.getFullYear() === year;
-      });
+        const dueTasks = tasks.filter((t: any) => {
+          const date = new Date(t.date);
+          return date.getMonth() + 1 === selectedMonth && date.getFullYear() === year;
+        });
 
-      // Tasks completed in the selected month based on completedDate
-      const completedTasks = tasks.filter((t: any) => {
-        if (!t.completed || !t.completedDate) return false;
-        const compDate = new Date(t.completedDate);
-        return compDate.getMonth() + 1 === selectedMonth && compDate.getFullYear() === year;
-      });
+        const completedTasks = tasks.filter((t: any) => {
+          if (!t.completed || !t.completedDate) return false;
+          const compDate = new Date(t.completedDate);
+          return compDate.getMonth() + 1 === selectedMonth && compDate.getFullYear() === year;
+        });
 
-      // Chart: count how many were completed on each day
-      const dayMap: { [day: number]: number } = {};
-      completedTasks.forEach((t: any) => {
-        const day = new Date(t.completedDate).getDate();
-        dayMap[day] = (dayMap[day] || 0) + 1;
-      });
+        const dayMap: { [day: number]: number } = {};
+        completedTasks.forEach((t: any) => {
+          const day = new Date(t.completedDate).getDate();
+          dayMap[day] = (dayMap[day] || 0) + 1;
+        });
 
-      const labels = Object.keys(dayMap).map((day) => day.toString());
-      const data = Object.values(dayMap);
+        const labels = Object.keys(dayMap).map((day) => day.toString());
+        const data = Object.values(dayMap);
 
-      setTasksDue(dueTasks.length);
-      setTasksComplete(completedTasks.length);
-      setChartData({ labels, data });
+        setTasksDue(dueTasks.length);
+        setTasksComplete(completedTasks.length);
+        setChartData({ labels, data });
+        setChartKey((prev) => prev + 1);
+      } catch (error) {
+        console.error("Error loading task data:", error);
+      }
     };
 
     loadData();
@@ -83,22 +87,23 @@ const ProgressScreen = () => {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
       <ScrollView style={styles.container}>
-        {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 8 }}>
-            <Ionicons name="arrow-back" size={24} color="black" />
+            <Ionicons name="arrow-back" size={24} color="#002D62" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>My Progress</Text>
           <View style={{ width: 32 }} />
         </View>
 
-        {/* Profile image */}
         <Image
           source={{ uri: "https://cdn-icons-png.flaticon.com/512/147/147144.png" }}
           style={styles.avatar}
         />
 
-        {/* Month selector */}
+        <View style={styles.tabHeader}>
+          <Text style={styles.tabActive}>Stats</Text>
+        </View>
+
         <RNPickerSelect
           onValueChange={(value) => setSelectedMonth(value)}
           value={selectedMonth}
@@ -110,36 +115,57 @@ const ProgressScreen = () => {
           }}
         />
 
-        {/* Stats */}
-        <Text style={styles.stats}>
-          Total tasks due in {months[selectedMonth - 1].label}: {tasksDue}
-        </Text>
-        <Text style={styles.stats}>Total tasks complete: {tasksComplete}</Text>
+        {selectedMonth && (
+          <>
+            <Text style={styles.stats}>
+              Total tasks due in {months[selectedMonth - 1]?.label}: {tasksDue}
+            </Text>
+            <Text style={styles.stats}>Total tasks complete: {tasksComplete}</Text>
+          </>
+        )}
 
-        {/* Chart */}
-        {chartData.data.length > 0 && (
+        {chartData.data.length > 0 ? (
           <View style={styles.chartWrapper}>
+            <Text style={styles.chartTitle}>
+              {months[selectedMonth - 1]?.label}
+            </Text>
             <BarChart
+              key={chartKey}
               data={{
                 labels: chartData.labels,
                 datasets: [{ data: chartData.data }],
               }}
               width={Dimensions.get("window").width - 40}
-              height={220}
+              height={280}
               fromZero
               showValuesOnTopOfBars
               yAxisLabel=""
+              withInnerLines
               chartConfig={{
                 backgroundColor: "#fff",
                 backgroundGradientFrom: "#fff",
                 backgroundGradientTo: "#fff",
                 decimalPlaces: 0,
-                color: () => "#4682B4",
+                color: () => `#002D62`,
                 labelColor: () => "#000",
+                propsForBackgroundLines: {
+                  strokeDasharray: "4",
+                  stroke: "#ccc",
+                },
+                barPercentage: 0.9,
               }}
-              style={{ borderRadius: 16 }}
+              style={{
+                borderRadius: 12,
+                marginTop: 16,
+              }}
+              verticalLabelRotation={0}
+              segments={4}
             />
           </View>
+        ) : (
+          <Text style={{ textAlign: "center", marginTop: 20, color: "#888" }}>
+            No data to show for this month.
+          </Text>
         )}
       </ScrollView>
     </SafeAreaView>
@@ -159,6 +185,7 @@ const styles = StyleSheet.create({
     height: 100,
     alignSelf: "center",
     marginBottom: 10,
+    borderRadius: 50,
   },
   header: {
     flexDirection: "row",
@@ -170,6 +197,21 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: "bold",
     textAlign: "center",
+    color: "#002D62",
+  },
+  tabHeader: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginTop: 10,
+    marginBottom: 20,
+  },
+  tabActive: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#002D62",
+    borderBottomWidth: 2,
+    borderColor: "#002D62",
+    paddingBottom: 4,
   },
   picker: {
     fontSize: 16,
@@ -177,7 +219,7 @@ const styles = StyleSheet.create({
     borderColor: "#ccc",
     borderWidth: 1,
     borderRadius: 8,
-    marginTop: 15,
+    marginTop: 5,
     marginBottom: 10,
     backgroundColor: "#f2f2f2",
   },
@@ -185,9 +227,17 @@ const styles = StyleSheet.create({
     fontSize: 18,
     marginVertical: 5,
     textAlign: "center",
+    color: "#002D62",
   },
   chartWrapper: {
-    marginTop: 20,
+    marginTop: 30,
     paddingBottom: 20,
+    alignItems: "center",
+  },
+  chartTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    marginBottom: 5,
+    color: "#002D62",
   },
 });
