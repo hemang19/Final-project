@@ -32,7 +32,6 @@ const TaskCompletionScreen = () => {
     const formatted = today.toLocaleDateString("en-US", {
       year: "numeric",
       month: "long",
-      day: "numeric",
     });
     setDateToday(formatted);
 
@@ -80,11 +79,11 @@ const TaskCompletionScreen = () => {
         </TouchableOpacity>
       </View>
 
-      <Text style={styles.subtitle}>Tasks due this month</Text>
+      <Text style={styles.subtitle}>Tasks due this month:</Text>
       <Text style={styles.date}>{dateToday}</Text>
 
       {/* Task Complete Message */}
-      <Text style={styles.success}>Task complete 🎉</Text>
+      <Text style={styles.success}>Tasks Completed 🎉</Text>
 
       {/* ✅ Completed Task Card */}
       {completedTask && renderTaskCard(completedTask)}
@@ -131,18 +130,21 @@ const styles = StyleSheet.create({
   date: {
     fontSize: 26,
     fontWeight: "bold",
+    paddingLeft: 20,
   },
   subtitle: {
     fontSize: 18,
     color: "#666",
-    marginTop: 4,
+    marginTop: 10,
     marginBottom: 20,
+    paddingLeft: 20,
   },
   success: {
     fontSize: 20,
     fontWeight: "bold",
     textAlign: "center",
     marginBottom: 20,
+    marginTop: 20,
   },
   sectionTitle: {
     fontSize: 18,
@@ -161,6 +163,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 3,
     elevation: 2,
+    width: "90%",
+    alignSelf: "center",
   },
   taskTitle: {
     fontSize: 16,
@@ -176,11 +180,13 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 10,
     marginTop: 20,
-    alignItems: "center",
+    width: "90%",
+    alignSelf: "center",
   },
   homeButtonText: {
     color: "#fff",
     fontSize: 16,
     fontWeight: "bold",
+    alignSelf: "center",
   },
 });

@@ -57,7 +57,17 @@ const ViewTasksScreen = () => {
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
 
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
+  const [username, setUsername] = useState("");
  
+  useEffect(() => {
+    const fetchUsername = async () => {
+      const storedUsername = await AsyncStorage.getItem("username");
+      if (storedUsername) setUsername(storedUsername);
+    };
+  
+    fetchUsername();
+  }, []);
+
   useFocusEffect(
 
     useCallback(() => {
@@ -224,8 +234,8 @@ const ViewTasksScreen = () => {
 <Ionicons name="arrow-back" size={24} color="black" />
 </TouchableOpacity>
 <Text style={styles.headerTitle}>View Tasks</Text>
-<TouchableOpacity onPress={() => navigation.navigate("AddTask")} style={{ padding: 8 }}>
-<Ionicons name="add-circle-outline" size={28} color="black" />
+<TouchableOpacity onPress={() => navigation.navigate("AddTask", { username })}>
+  <Ionicons name="add-circle-outline" size={28} color="black" />
 </TouchableOpacity>
 </View>
  

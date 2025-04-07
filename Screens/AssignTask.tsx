@@ -10,29 +10,35 @@ import RNPickerSelect from "react-native-picker-select";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
+import { useRoute } from "@react-navigation/native";
 
 const colors = ["#F5C6D6", "#B4E1C5", "#B5D8E8", "#C2AFF0", "#F4D58D"];
 
 const AssignTaskScreen = () => {
   const navigation = useNavigation();
-  const [taskOptions, setTaskOptions] = useState<{ label: string; value: string }[]>([]);
-  const [selectedTask, setSelectedTask] = useState("");
+  const [taskOptions, setTaskOptions] = useState<any[]>([]);
+  const [selectedTask, setSelectedTask] = useState<any>(null);
   const [selectedColor, setSelectedColor] = useState("");
   const [email, setEmail] = useState("");
+  const route = useRoute();
+  const { username } = route.params as { username: string };
 
   useEffect(() => {
     const fetchTasks = async () => {
       const stored = await AsyncStorage.getItem("tasks");
       const tasks = stored ? JSON.parse(stored) : [];
+    
       const options = tasks.map((task: any) => ({
         label: task.title,
-        value: task.title,
+        value: task.id, 
+        task,          
       }));
+    
       setTaskOptions(options);
-    };
-
+    };    
+  
     fetchTasks();
-  }, []);
+  }, []);  
 
   const handleCreate = async () => {
     try {
@@ -41,12 +47,12 @@ const AssignTaskScreen = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           to: email,
-          from: "Deadlinez",
-          taskName: selectedTask,
-          description: `Assigned task: ${selectedTask}`,
+          from: username || "Anonymous", // now pulled from route params
+          taskName: selectedTask?.title,
+          description: `You have been assigned a new task. Due date: ${selectedTask?.date}.`,
         }),
       });
-
+  
       const data = await response.json();
       if (response.ok) {
         alert("Email sent successfully!");
@@ -62,19 +68,22 @@ const AssignTaskScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Assign task:</Text>
+      <Text style={styles.title}>Assign Task</Text>
 
-      <Text style={styles.label}>Select task:</Text>
+      <Text style={styles.label}>Select Task:</Text>
       <RNPickerSelect
-        onValueChange={setSelectedTask}
-        value={selectedTask}
+        onValueChange={(value) => {
+          const fullTask = taskOptions.find((option) => option.value === value)?.task;
+          setSelectedTask(fullTask || null);
+        }}
+        value={selectedTask?.id || ""}
         items={taskOptions}
-        placeholder={{ label: "Choose a task", value: "" }}
+        placeholder={{ label: "Choose a task", value: "" }} // use empty string instead of null
         style={pickerStyles}
         Icon={() => <Ionicons name="chevron-down" size={20} color="#000" />}
       />
 
-      <Text style={styles.label}>Select colour (optional):</Text>
+      <Text style={styles.label}>Select Colour (optional):</Text>
       <View style={styles.colorRow}>
         {colors.map((color) => (
           <TouchableOpacity
@@ -89,7 +98,7 @@ const AssignTaskScreen = () => {
         ))}
       </View>
 
-      <Text style={styles.label}>Assign task:</Text>
+      <Text style={styles.label}>Assign Task:</Text>
       <TextInput
         placeholder="example@gmail.com"
         value={email}
@@ -124,9 +133,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   title: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: "bold",
-    marginBottom: 15,
+    marginBottom: 20,
+    textAlign: "left",
   },
   label: {
     fontWeight: "600",
@@ -134,11 +144,12 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   input: {
-    backgroundColor: "#F5F5F5",
-    borderRadius: 25,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    fontSize: 16,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 5,
+    padding: 10,
+    marginBottom: 5,
+    backgroundColor: "#fff",
   },
   colorRow: {
     flexDirection: "row",
@@ -180,19 +191,27 @@ const styles = StyleSheet.create({
 
 const pickerStyles = {
   inputIOS: {
-    backgroundColor: "#F5F5F5",
-    borderRadius: 25,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    fontSize: 16,
+    backgroundColor: "#fff",
+    borderRadius: 5,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    fontSize: 14,
     color: "#000",
+    borderColor: "#ddd",
+    borderWidth: 1,
   },
   inputAndroid: {
-    backgroundColor: "#F5F5F5",
-    borderRadius: 25,
+    backgroundColor: "#fff",
+    borderRadius: 5,
     paddingVertical: 10,
     paddingHorizontal: 20,
-    fontSize: 16,
+    fontSize: 14,
     color: "#000",
+    borderColor: "#ddd",
+    borderWidth: 1,
+  },
+  iconContainer: {
+    top: 12,
+    right: 10,
   },
 };

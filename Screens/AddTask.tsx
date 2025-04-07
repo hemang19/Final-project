@@ -4,6 +4,8 @@ import Modal from "react-native-modal";
 import { Calendar } from "react-native-calendars";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useRoute } from "@react-navigation/native";
+
 
 export default function AddTaskScreen({ navigation }) {
   const [taskName, setTaskName] = useState("");
@@ -13,8 +15,16 @@ export default function AddTaskScreen({ navigation }) {
   const [isModalVisible, setIsModalVisible] = useState(false);
 
   const colors = ["#F5C6D6", "#B4E1C5", "#B5D8E8", "#C2AFF0", "#F4D58D"];
+  const route = useRoute();
+  const { username } = route.params as { username: string };
 
-  const handleCreateTask = () => {
+  React.useEffect(() => {
+    if (username) {
+      AsyncStorage.setItem("username", username);
+    }
+  }, [username]);
+
+  const handleCreateTask = async () => {
     const newTask = {
       id: Math.random().toString(),
       title: taskName,
@@ -24,19 +34,40 @@ export default function AddTaskScreen({ navigation }) {
       daysRemaining: calculateDaysRemaining(selectedDate),
       urgent: calculateDaysRemaining(selectedDate) <= 3,
     };
-
-    AsyncStorage.getItem("tasks").then((data) => {
+  
+    try {
+      const data = await AsyncStorage.getItem("tasks");
       const existingTasks = data ? JSON.parse(data) : [];
-      const updatedTasks = [...existingTasks, newTask].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-      AsyncStorage.setItem("tasks", JSON.stringify(updatedTasks));
-    });
+      const updatedTasks = [...existingTasks, newTask].sort(
+        (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+      );
+      await AsyncStorage.setItem("tasks", JSON.stringify(updatedTasks));
+  
 
-    setIsModalVisible(true);
-    setTimeout(() => {
-      navigation.goBack();
-      setIsModalVisible(false);
-    }, 1500);
-  };
+      if (assignedEmail) {
+        const storedUsername = await AsyncStorage.getItem("username");
+        await fetch("http://192.168.1.73:5000/send-invite", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            to: assignedEmail,
+            from: storedUsername || "Anonymous",
+            taskName: taskName,
+            description: `You have been assigned a new task. Due date: ${selectedDate}.`,
+          }),
+        });
+      }
+  
+      setIsModalVisible(true);
+      setTimeout(() => {
+        navigation.goBack();
+        setIsModalVisible(false);
+      }, 1500);
+    } catch (err) {
+      console.error("Error creating task or sending email", err);
+      alert("Something went wrong. Please try again.");
+    }
+  };  
 
   const calculateDaysRemaining = (taskDate) => {
     const dueDate = new Date(taskDate);

@@ -96,14 +96,14 @@ const HomeScreen = () => {
       </TouchableOpacity>
       <TouchableOpacity
         style={styles.linkRow}
-        onPress={() => navigation.navigate("AddTask")}
+        onPress={() => navigation.navigate("AddTask", { username })}
       >
         <Text style={styles.linkText}>Add Tasks</Text>
         <Ionicons name="add" size={20} />
       </TouchableOpacity>
       <TouchableOpacity
         style={styles.linkRow}
-        onPress={() => navigation.navigate("AssignTask")}
+        onPress={() => navigation.navigate("AssignTask", { username })}
       >
         <Text style={styles.linkText}>Assign Task</Text>
         <Ionicons name="person-add" size={20} />
