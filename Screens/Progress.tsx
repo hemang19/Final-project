@@ -47,19 +47,28 @@ const ProgressScreen = () => {
 
       let due = 0;
       let complete = 0;
-      const dayMap = {};
+      const dayMap: { [key: string]: number } = {};
 
       tasks.forEach((task) => {
-        const date = new Date(task.date);
-        const month = date.getMonth() + 1;
-        const taskYear = date.getFullYear();
+        if (task.completed === true && task.completedDate) {
+          const compDate = new Date(task.completedDate);
+          const month = compDate.getMonth() + 1;
+          const taskYear = compDate.getFullYear();
 
-        if (month === selectedMonth && taskYear === year) {
-          due++;
-          if (task.completed) {
+          if (month === selectedMonth && taskYear === year) {
             complete++;
-            const day = date.getDate();
+            const day = compDate.getDate();
             dayMap[day] = (dayMap[day] || 0) + 1;
+          }
+        }
+
+        if (task.completed !== true) {
+          const dueDate = new Date(task.date);
+          const month = dueDate.getMonth() + 1;
+          const taskYear = dueDate.getFullYear();
+
+          if (month === selectedMonth && taskYear === year) {
+            due++;
           }
         }
       });
@@ -87,11 +96,13 @@ const ProgressScreen = () => {
           <View style={{ width: 32 }} />
         </View>
 
+        {/* Avatar */}
         <Image
           source={{ uri: "https://cdn-icons-png.flaticon.com/512/147/147144.png" }}
           style={styles.avatar}
         />
 
+        {/* Month Picker */}
         <RNPickerSelect
           onValueChange={(value) => setSelectedMonth(value)}
           value={selectedMonth}
@@ -103,11 +114,13 @@ const ProgressScreen = () => {
           }}
         />
 
+        {/* Task Stats */}
         <Text style={styles.stats}>
           Total tasks due in {months[selectedMonth - 1].label}: {tasksDue}
         </Text>
         <Text style={styles.stats}>Total tasks complete: {tasksComplete}</Text>
 
+        {/* Chart */}
         {chartData.data.length > 0 && (
           <View style={styles.chartWrapper}>
             <BarChart

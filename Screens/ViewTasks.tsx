@@ -22,6 +22,7 @@ type Task = {
   daysRemaining: number;
   urgent: boolean;
   completed?: boolean;
+  completedDate?: string;
 };
 
 const ViewTasksScreen = () => {
@@ -36,7 +37,7 @@ const ViewTasksScreen = () => {
         const storedTasks = await AsyncStorage.getItem("tasks");
         if (storedTasks) {
           const parsedTasks = JSON.parse(storedTasks);
-          const incompleteTasks = parsedTasks.filter((task: Task) => !task.completed); 
+          const incompleteTasks = parsedTasks.filter((task: Task) => !task.completed);
           setTasks(incompleteTasks);
         } else {
           setTasks([]);
@@ -44,7 +45,7 @@ const ViewTasksScreen = () => {
       };
       loadTasks();
     }, [])
-  );  
+  );
 
   const confirmDeleteTask = (taskId: string) => {
     setSelectedTaskId(taskId);
@@ -62,14 +63,26 @@ const ViewTasksScreen = () => {
   };
 
   const markTaskComplete = async (taskId: string) => {
-    const updatedTasks = tasks.map((task) =>
-      task.id === taskId ? { ...task, completed: true } : task
+    const storedTasks = await AsyncStorage.getItem("tasks");
+    const allTasks: Task[] = storedTasks ? JSON.parse(storedTasks) : [];
+
+    const updatedAllTasks = allTasks.map((task) =>
+      task.id === taskId
+        ? {
+            ...task,
+            completed: true,
+            completedDate: new Date().toISOString(),
+          }
+        : task
     );
-    setTasks(updatedTasks);
-    await AsyncStorage.setItem("tasks", JSON.stringify(updatedTasks));
+
+    const updatedViewTasks = updatedAllTasks.filter((task) => !task.completed);
+
+    await AsyncStorage.setItem("tasks", JSON.stringify(updatedAllTasks));
+    setTasks(updatedViewTasks);
     setSelectedTaskId(null);
     navigation.navigate("TaskComplete", { taskId });
-  };  
+  };
 
   const renderTaskItem = ({ item }: { item: Task }) => (
     <View
