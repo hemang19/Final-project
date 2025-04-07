@@ -1,30 +1,52 @@
-import React, { useState } from "react";
-import { View, Text, StyleSheet, TextInput, TouchableOpacity } from "react-native";
-import { Ionicons } from "@expo/vector-icons"; // For icons
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+} from "react-native";
+import RNPickerSelect from "react-native-picker-select";
+import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
+
+const colors = ["#F5C6D6", "#B4E1C5", "#B5D8E8", "#C2AFF0", "#F4D58D"];
 
 const AssignTaskScreen = () => {
   const navigation = useNavigation();
-  
-  // States to manage the inputs
+  const [taskOptions, setTaskOptions] = useState<{ label: string; value: string }[]>([]);
+  const [selectedTask, setSelectedTask] = useState("");
+  const [selectedColor, setSelectedColor] = useState("");
   const [email, setEmail] = useState("");
-  const [taskName, setTaskName] = useState("");
-  const [description, setDescription] = useState("");
-  
-  const handleSend = async () => {
+
+  useEffect(() => {
+    const fetchTasks = async () => {
+      const stored = await AsyncStorage.getItem("tasks");
+      const tasks = stored ? JSON.parse(stored) : [];
+      const options = tasks.map((task: any) => ({
+        label: task.title,
+        value: task.title,
+      }));
+      setTaskOptions(options);
+    };
+
+    fetchTasks();
+  }, []);
+
+  const handleCreate = async () => {
     try {
-      // update the url to your IPV4 address
       const response = await fetch("http://192.168.1.73:5000/send-invite", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           to: email,
           from: "Deadlinez",
-          taskName,
-          description,
+          taskName: selectedTask,
+          description: `Assigned task: ${selectedTask}`,
         }),
       });
-  
+
       const data = await response.json();
       if (response.ok) {
         alert("Email sent successfully!");
@@ -36,49 +58,58 @@ const AssignTaskScreen = () => {
       console.error("Error sending email", err);
       alert("Network error.");
     }
-  };  
+  };
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-        <Ionicons name="arrow-back" size={24} color="black" />
-      </TouchableOpacity>
-      <Text style={styles.header}>Assign Task</Text>
-      
-      {/* Input for email */}
+      <Text style={styles.title}>Assign task:</Text>
+
+      <Text style={styles.label}>Select task:</Text>
+      <RNPickerSelect
+        onValueChange={setSelectedTask}
+        value={selectedTask}
+        items={taskOptions}
+        placeholder={{ label: "Choose a task", value: "" }}
+        style={pickerStyles}
+        Icon={() => <Ionicons name="chevron-down" size={20} color="#000" />}
+      />
+
+      <Text style={styles.label}>Select colour (optional):</Text>
+      <View style={styles.colorRow}>
+        {colors.map((color) => (
+          <TouchableOpacity
+            key={color}
+            style={[
+              styles.colorCircle,
+              { backgroundColor: color },
+              selectedColor === color && styles.selectedColorBorder,
+            ]}
+            onPress={() => setSelectedColor(color)}
+          />
+        ))}
+      </View>
+
+      <Text style={styles.label}>Assign task:</Text>
       <TextInput
-        style={styles.input}
-        placeholder="Recipient's Email"
+        placeholder="example@gmail.com"
         value={email}
         onChangeText={setEmail}
         keyboardType="email-address"
-        placeholderTextColor="#B0B0B0"
-      />
-      
-      {/* Input for task name */}
-      <TextInput
         style={styles.input}
-        placeholder="Task Name"
-        value={taskName}
-        onChangeText={setTaskName}
-        placeholderTextColor="#B0B0B0"
       />
-      
-      {/* Input for task description */}
-      <TextInput
-        style={[styles.input, styles.textArea]}
-        placeholder="Task Description"
-        value={description}
-        onChangeText={setDescription}
-        multiline
-        placeholderTextColor="#B0B0B0"
-      />
-      
-      {/* Send Button */}
-      <TouchableOpacity style={styles.sendButton} onPress={handleSend}>
-        <Text style={styles.sendButtonText}>Send Task</Text>
-        <Ionicons name="send" size={20} color="white" />
-      </TouchableOpacity>
+
+      <View style={styles.buttonRow}>
+        <TouchableOpacity style={[styles.button, styles.createButton]} onPress={handleCreate}>
+          <Text style={styles.buttonText}>Create</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.button, styles.cancelButton]}
+          onPress={() => navigation.goBack()}
+        >
+          <Text style={styles.buttonText}>Cancel</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
@@ -88,52 +119,80 @@ export default AssignTaskScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
-    backgroundColor: "#F8F8F8", // Light background color
+    padding: 25,
+    backgroundColor: "#fff",
     justifyContent: "center",
   },
-  header: {
-    fontSize: 28,
+  title: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 15,
+  },
+  label: {
     fontWeight: "600",
-    marginBottom: 30,
-    color: "#333", // Dark text for readability
-    textAlign: "center",
-    letterSpacing: 1,
+    marginTop: 15,
+    marginBottom: 5,
   },
   input: {
-    backgroundColor: "#FFF",
-    padding: 15,
-    borderRadius: 12,
-    marginBottom: 20,
+    backgroundColor: "#F5F5F5",
+    borderRadius: 25,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
     fontSize: 16,
-    borderColor: "#DDD",
-    borderWidth: 1,
-    color: "#333",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
   },
-  textArea: {
-    height: 120,
-    textAlignVertical: "top",
-  },
-  sendButton: {
+  colorRow: {
     flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    paddingVertical: 15,
-    backgroundColor: "#34C759", // Green for action
-    borderRadius: 10,
-    shadowColor: "#34C759",
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
+    gap: 10,
+    marginBottom: 10,
   },
-  sendButtonText: {
+  colorCircle: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+  },
+  selectedColorBorder: {
+    borderWidth: 2,
+    borderColor: "#000",
+  },
+  buttonRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 20,
+  },
+  button: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 6,
+    alignItems: "center",
+    marginHorizontal: 5,
+  },
+  createButton: {
+    backgroundColor: "#4CAF50",
+  },
+  cancelButton: {
+    backgroundColor: "#D32F2F",
+  },
+  buttonText: {
     color: "#fff",
-    fontSize: 18,
-    fontWeight: "700",
-    marginRight: 10,
+    fontWeight: "bold",
   },
 });
+
+const pickerStyles = {
+  inputIOS: {
+    backgroundColor: "#F5F5F5",
+    borderRadius: 25,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    fontSize: 16,
+    color: "#000",
+  },
+  inputAndroid: {
+    backgroundColor: "#F5F5F5",
+    borderRadius: 25,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    fontSize: 16,
+    color: "#000",
+  },
+};

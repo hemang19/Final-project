@@ -20,10 +20,7 @@ const ProgressScreen = () => {
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
   const [tasksDue, setTasksDue] = useState(0);
   const [tasksComplete, setTasksComplete] = useState(0);
-  const [chartData, setChartData] = useState<{ labels: string[]; data: number[] }>({
-    labels: [],
-    data: [],
-  });
+  const [chartData, setChartData] = useState({ labels: [], data: [] });
 
   const navigation = useNavigation();
 
@@ -46,34 +43,32 @@ const ProgressScreen = () => {
     const loadData = async () => {
       const stored = await AsyncStorage.getItem("tasks");
       const tasks = stored ? JSON.parse(stored) : [];
-
       const year = new Date().getFullYear();
 
-      // Tasks due in the selected month
-      const dueTasks = tasks.filter((t: any) => {
-        const date = new Date(t.date);
-        return date.getMonth() + 1 === selectedMonth && date.getFullYear() === year;
-      });
+      let due = 0;
+      let complete = 0;
+      const dayMap = {};
 
-      // Tasks completed in the selected month based on completedDate
-      const completedTasks = tasks.filter((t: any) => {
-        if (!t.completed || !t.completedDate) return false;
-        const compDate = new Date(t.completedDate);
-        return compDate.getMonth() + 1 === selectedMonth && compDate.getFullYear() === year;
-      });
+      tasks.forEach((task) => {
+        const date = new Date(task.date);
+        const month = date.getMonth() + 1;
+        const taskYear = date.getFullYear();
 
-      // Chart: count how many were completed on each day
-      const dayMap: { [day: number]: number } = {};
-      completedTasks.forEach((t: any) => {
-        const day = new Date(t.completedDate).getDate();
-        dayMap[day] = (dayMap[day] || 0) + 1;
+        if (month === selectedMonth && taskYear === year) {
+          due++;
+          if (task.completed) {
+            complete++;
+            const day = date.getDate();
+            dayMap[day] = (dayMap[day] || 0) + 1;
+          }
+        }
       });
 
       const labels = Object.keys(dayMap).map((day) => day.toString());
       const data = Object.values(dayMap);
 
-      setTasksDue(dueTasks.length);
-      setTasksComplete(completedTasks.length);
+      setTasksDue(due);
+      setTasksComplete(complete);
       setChartData({ labels, data });
     };
 
@@ -92,13 +87,11 @@ const ProgressScreen = () => {
           <View style={{ width: 32 }} />
         </View>
 
-        {/* Profile image */}
         <Image
           source={{ uri: "https://cdn-icons-png.flaticon.com/512/147/147144.png" }}
           style={styles.avatar}
         />
 
-        {/* Month selector */}
         <RNPickerSelect
           onValueChange={(value) => setSelectedMonth(value)}
           value={selectedMonth}
@@ -110,13 +103,11 @@ const ProgressScreen = () => {
           }}
         />
 
-        {/* Stats */}
         <Text style={styles.stats}>
           Total tasks due in {months[selectedMonth - 1].label}: {tasksDue}
         </Text>
         <Text style={styles.stats}>Total tasks complete: {tasksComplete}</Text>
 
-        {/* Chart */}
         {chartData.data.length > 0 && (
           <View style={styles.chartWrapper}>
             <BarChart
