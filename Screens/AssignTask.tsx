@@ -27,18 +27,21 @@ const AssignTaskScreen = () => {
     const fetchTasks = async () => {
       const stored = await AsyncStorage.getItem("tasks");
       const tasks = stored ? JSON.parse(stored) : [];
-    
-      const options = tasks.map((task: any) => ({
+
+      const pendingTasks = tasks.filter((task: any) => !task.completed);
+  
+      const options = pendingTasks.map((task: any) => ({
         label: task.title,
-        value: task.id, 
-        task,          
+        value: task.id,
+        task,
       }));
-    
+  
       setTaskOptions(options);
-    };    
+    };
   
     fetchTasks();
-  }, []);  
+  }, []);
+  
 
   const handleCreate = async () => {
     try {
@@ -109,7 +112,7 @@ const AssignTaskScreen = () => {
 
       <View style={styles.buttonRow}>
         <TouchableOpacity style={[styles.button, styles.createButton]} onPress={handleCreate}>
-          <Text style={styles.buttonText}>Create</Text>
+          <Text style={styles.buttonText}>Assign</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -129,8 +132,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 25,
-    backgroundColor: "#fff",
-    justifyContent: "center",
+    backgroundColor: "#F5F5F5",
+    marginTop: 70,
   },
   title: {
     fontSize: 24,

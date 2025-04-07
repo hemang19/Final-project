@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, KeyboardAvoidingView, Platform } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import credentialsData from "../credentials.json"; // Import JSON file
@@ -62,6 +62,8 @@ const SignInScreen = () => {
   };
 
   return (
+    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"}
+    style={{ flex: 1 }}>
     <View style={styles.container}>
       {/* Display the Deadlinez logo */}
       <Image source={require("../assets/deadlinez-logo.png")} style={styles.logo} />
@@ -93,6 +95,7 @@ const SignInScreen = () => {
 
       <Text style={styles.footerText}>Don't have an account? <Text style={styles.link}>Sign up</Text></Text>
     </View>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -104,10 +107,10 @@ const styles = StyleSheet.create({
     justifyContent: "center", 
     alignItems: "center", 
     backgroundColor: "#FFFFFF",
-    padding: 20,
+    paddingHorizontal: 20,
   },
   logo: {
-    width: 150,         // Adjust size as needed
+    width: 150,         
     height: 150,
     marginBottom: 20,
   },

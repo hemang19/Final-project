@@ -91,7 +91,7 @@ const TaskCompletionScreen = () => {
       {/* 📌 Upcoming Tasks */}
       {upcomingTasks.length > 0 && (
         <>
-          <Text style={styles.sectionTitle}>Upcoming tasks</Text>
+          <Text style={styles.sectionTitle}>Upcoming Tasks:</Text>
           <FlatList
             data={upcomingTasks}
             renderItem={({ item }) => renderTaskCard(item)}
@@ -152,6 +152,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginBottom: 10,
     color: "#333",
+    paddingLeft: 10,
   },
   taskCard: {
     backgroundColor: "#f8f8f8",
